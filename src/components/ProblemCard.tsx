@@ -57,13 +57,13 @@ export const ProblemCard = ({
 
       {/* Stats */}
       <div className="flex items-center gap-3 mb-3">
-        <div className="flex items-center gap-1.5 text-xs text-muted-foreground">
-          <Clock className="h-3.5 w-3.5" />
-          <span>O(n)</span>
+        <div className="flex items-center gap-1.5 text-xs text-muted-foreground" title="Time Complexity">
+          <Clock className="h-3.5 w-3.5 text-primary" />
+          <span className="font-mono">{problem.timeComplexity}</span>
         </div>
-        <div className="flex items-center gap-1.5 text-xs text-muted-foreground">
-          <HardDrive className="h-3.5 w-3.5" />
-          <span>O(1)</span>
+        <div className="flex items-center gap-1.5 text-xs text-muted-foreground" title="Space Complexity">
+          <HardDrive className="h-3.5 w-3.5 text-accent" />
+          <span className="font-mono">{problem.spaceComplexity}</span>
         </div>
         <span className="text-xs text-muted-foreground ml-auto">
           {problem.acceptance}% acceptance

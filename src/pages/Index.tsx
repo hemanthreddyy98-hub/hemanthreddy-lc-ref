@@ -5,6 +5,8 @@ import { Sidebar } from '@/components/Sidebar';
 import { ProblemCard } from '@/components/ProblemCard';
 import { HeroSection } from '@/components/HeroSection';
 import { Footer } from '@/components/Footer';
+import { CompanyFilter } from '@/components/CompanyFilter';
+import { ContactBanner } from '@/components/ContactBanner';
 import { problems as allProblems, topics } from '@/data/leetcodeProblems';
 
 const PROBLEMS_PER_PAGE = 24;
@@ -13,6 +15,7 @@ const Index = () => {
   const [searchQuery, setSearchQuery] = useState('');
   const [selectedTopic, setSelectedTopic] = useState('All');
   const [difficulty, setDifficulty] = useState('All');
+  const [selectedCompany, setSelectedCompany] = useState('All');
   const [bookmarked, setBookmarked] = useState<Set<number>>(new Set());
   const [solved, setSolved] = useState<Set<number>>(new Set());
   const [isSidebarOpen, setIsSidebarOpen] = useState(false);
@@ -42,9 +45,14 @@ const Index = () => {
         return false;
       }
 
+      // Company filter
+      if (selectedCompany !== 'All' && !problem.companies.includes(selectedCompany)) {
+        return false;
+      }
+
       return true;
     });
-  }, [searchQuery, selectedTopic, difficulty]);
+  }, [searchQuery, selectedTopic, difficulty, selectedCompany]);
 
   const visibleProblems = useMemo(() => {
     return filteredProblems.slice(0, visibleCount);
@@ -89,6 +97,11 @@ const Index = () => {
     setVisibleCount(PROBLEMS_PER_PAGE);
   };
 
+  const handleCompanyChange = (company: string) => {
+    setSelectedCompany(company);
+    setVisibleCount(PROBLEMS_PER_PAGE);
+  };
+
   return (
     <div className="min-h-screen flex flex-col bg-background">
       <Header
@@ -120,6 +133,17 @@ const Index = () => {
         <main className="flex-1 lg:ml-0 min-w-0">
           <div className="max-w-7xl mx-auto px-4 lg:px-6 py-6">
             <HeroSection onDifficultyFilter={handleDifficultyFilter} />
+
+            {/* Contact Banner */}
+            <ContactBanner />
+
+            {/* Company Filter */}
+            <div className="mb-6">
+              <CompanyFilter 
+                selectedCompany={selectedCompany} 
+                onCompanyChange={handleCompanyChange} 
+              />
+            </div>
 
             {/* Section Header */}
             <div className="flex items-center gap-3 mb-6">

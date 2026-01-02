@@ -12,7 +12,7 @@ export const Footer = () => {
             </div>
             <div className="text-left">
               <h3 className="text-xl font-bold text-foreground">Developed by Hemanth Reddy</h3>
-              <p className="text-sm text-primary font-medium">Created by someone who solved 10,000+ LeetCode problems</p>
+              <p className="text-sm text-primary font-medium">20,000+ problems solved across all major coding platforms</p>
             </div>
           </div>
           
@@ -35,15 +35,6 @@ export const Footer = () => {
             >
               <Linkedin className="h-5 w-5 text-muted-foreground group-hover:text-primary transition-colors" />
               <span className="text-sm text-muted-foreground group-hover:text-foreground transition-colors">LinkedIn</span>
-            </a>
-            <a
-              href="https://leetcode.com/u/reddyhemanth694/"
-              target="_blank"
-              rel="noopener noreferrer"
-              className="flex items-center gap-2 px-4 py-2 rounded-lg bg-card border border-border/50 hover:border-primary/50 hover:bg-primary/5 transition-all duration-300 group"
-            >
-              <Code2 className="h-5 w-5 text-muted-foreground group-hover:text-primary transition-colors" />
-              <span className="text-sm text-muted-foreground group-hover:text-foreground transition-colors">LeetCode</span>
             </a>
           </div>
 
@@ -68,26 +59,48 @@ export const Footer = () => {
               <div className="w-9 h-9 rounded-lg bg-primary/10 flex items-center justify-center">
                 <Code2 className="h-5 w-5 text-primary" />
               </div>
-              <span className="font-semibold text-lg">LeetCode Problem Index</span>
+              <span className="font-semibold text-lg">Coding Problem Index</span>
             </div>
             <p className="text-muted-foreground text-sm">
-              A comprehensive collection of all LeetCode problems organized by topic and sub-topic.
+              A comprehensive collection of 20,000+ problems from LeetCode, HackerRank, CodeChef, Coding Ninjas, CodeTantra, TAi Platform & more.
             </p>
           </div>
 
-          {/* Quick Links */}
+          {/* Platforms */}
           <div>
-            <h3 className="font-semibold text-sm mb-4 text-foreground">Quick Links</h3>
+            <h3 className="font-semibold text-sm mb-4 text-foreground">Platforms Covered</h3>
+            <ul className="space-y-2 text-sm text-muted-foreground">
+              <li>LeetCode • HackerRank • CodeChef</li>
+              <li>Coding Ninjas • CodeTantra</li>
+              <li>TAi Platform • GeeksforGeeks</li>
+              <li>Codeforces • AtCoder • SPOJ</li>
+            </ul>
+          </div>
+
+          {/* Resources */}
+          <div>
+            <h3 className="font-semibold text-sm mb-4 text-foreground">Resources</h3>
             <ul className="space-y-2">
               <li>
                 <a
-                  href="https://leetcode.com"
+                  href="https://neetcode.io"
                   target="_blank"
                   rel="noopener noreferrer"
                   className="text-sm text-muted-foreground hover:text-primary transition-colors flex items-center gap-2"
                 >
                   <ExternalLink className="h-3.5 w-3.5" />
-                  LeetCode
+                  NeetCode
+                </a>
+              </li>
+              <li>
+                <a
+                  href="https://takeuforward.org"
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="text-sm text-muted-foreground hover:text-primary transition-colors flex items-center gap-2"
+                >
+                  <ExternalLink className="h-3.5 w-3.5" />
+                  TakeUForward
                 </a>
               </li>
               <li>
@@ -103,33 +116,6 @@ export const Footer = () => {
               </li>
             </ul>
           </div>
-
-          {/* Resources */}
-          <div>
-            <h3 className="font-semibold text-sm mb-4 text-foreground">Resources</h3>
-            <ul className="space-y-2">
-              <li>
-                <a
-                  href="https://neetcode.io"
-                  target="_blank"
-                  rel="noopener noreferrer"
-                  className="text-sm text-muted-foreground hover:text-primary transition-colors"
-                >
-                  NeetCode
-                </a>
-              </li>
-              <li>
-                <a
-                  href="https://takeuforward.org"
-                  target="_blank"
-                  rel="noopener noreferrer"
-                  className="text-sm text-muted-foreground hover:text-primary transition-colors"
-                >
-                  TakeUForward
-                </a>
-              </li>
-            </ul>
-          </div>
         </div>
 
         <div className="border-t border-border/50 mt-8 pt-6 flex flex-col sm:flex-row items-center justify-between gap-4">
@@ -137,7 +123,7 @@ export const Footer = () => {
             Developed with passion by <span className="text-primary font-medium">Hemanth Reddy</span>
           </p>
           <p className="text-sm text-muted-foreground">
-            © {new Date().getFullYear()} LeetCode Problem Index. All rights reserved.
+            © {new Date().getFullYear()} Coding Problem Index. All rights reserved.
           </p>
         </div>
       </div>

@@ -16,7 +16,7 @@ export const HeroSection = ({ onDifficultyFilter }: HeroSectionProps) => {
           <span className="text-foreground">Problem Index</span>
         </h1>
         <p className="text-muted-foreground text-lg max-w-2xl">
-          <span className="text-primary font-semibold">20,000+</span> problems solved across LeetCode, HackerRank, CodeChef, Coding Ninjas, CodeTantra, TAi Platform & more. Organized by topic with approach hints & company tags.
+          <span className="text-primary font-semibold">20,000+</span> problems solved across LeetCode, HackerRank, CodeChef, Coding Ninjas, CodeTantra, TAI & more. Organized by topic with approach hints & company tags.
         </p>
         <div className="flex flex-wrap gap-2 mt-3 text-xs text-muted-foreground">
           <span className="px-2 py-1 bg-[#FFA116]/10 text-[#FFA116] rounded">LeetCode</span>
@@ -25,7 +25,7 @@ export const HeroSection = ({ onDifficultyFilter }: HeroSectionProps) => {
           <span className="px-2 py-1 bg-[#F66C3B]/10 text-[#F66C3B] rounded">Coding Ninjas</span>
           <span className="px-2 py-1 bg-[#2EC866]/10 text-[#2EC866] rounded">GeeksforGeeks</span>
           <span className="px-2 py-1 bg-purple-500/10 text-purple-500 rounded">CodeTantra</span>
-          <span className="px-2 py-1 bg-blue-500/10 text-blue-500 rounded">TAi Platform</span>
+          <span className="px-2 py-1 bg-blue-500/10 text-blue-500 rounded">TAI</span>
         </div>
       </div>
 

@@ -62,7 +62,7 @@ export const Footer = () => {
               <span className="font-semibold text-lg">Coding Problem Index</span>
             </div>
             <p className="text-muted-foreground text-sm">
-              A comprehensive collection of 20,000+ problems from LeetCode, HackerRank, CodeChef, Coding Ninjas, CodeTantra, TAi Platform & more.
+              A comprehensive collection of 20,000+ problems from LeetCode, HackerRank, CodeChef, Coding Ninjas, CodeTantra, TAI & more.
             </p>
           </div>
 
@@ -72,7 +72,7 @@ export const Footer = () => {
             <ul className="space-y-2 text-sm text-muted-foreground">
               <li>LeetCode • HackerRank • CodeChef</li>
               <li>Coding Ninjas • CodeTantra</li>
-              <li>TAi Platform • GeeksforGeeks</li>
+              <li>TAI • GeeksforGeeks</li>
               <li>Codeforces • AtCoder • SPOJ</li>
             </ul>
           </div>

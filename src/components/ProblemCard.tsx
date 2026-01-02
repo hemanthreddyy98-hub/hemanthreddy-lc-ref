@@ -1,4 +1,4 @@
-import { Clock, HardDrive, ExternalLink, Bookmark, BookmarkCheck, Check, Lock } from 'lucide-react';
+import { Clock, HardDrive, ExternalLink, Bookmark, BookmarkCheck, Check, Lock, Lightbulb } from 'lucide-react';
 import { Problem } from '@/data/leetcodeProblems';
 import { cn } from '@/lib/utils';
 import { Button } from '@/components/ui/button';
@@ -54,6 +54,14 @@ export const ProblemCard = ({
       <h3 className="text-foreground font-semibold mb-3 line-clamp-2 leading-tight">
         {problem.title}
       </h3>
+
+      {/* Approach Hint */}
+      {problem.approach && (
+        <div className="flex items-start gap-2 mb-3 p-2 rounded-lg bg-accent/10 border border-accent/20">
+          <Lightbulb className="h-3.5 w-3.5 text-accent mt-0.5 flex-shrink-0" />
+          <span className="text-xs text-accent leading-relaxed">{problem.approach}</span>
+        </div>
+      )}
 
       {/* Stats */}
       <div className="flex items-center gap-3 mb-3">

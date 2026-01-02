@@ -5,7 +5,13 @@ interface CompanyFilterProps {
   onCompanyChange: (company: string) => void;
 }
 
-const companies = ['All', 'Google', 'Amazon', 'Meta', 'Microsoft', 'Apple', 'Netflix', 'Adobe', 'Uber', 'LinkedIn'];
+const companies = [
+  'All', 'Google', 'Amazon', 'Meta', 'Microsoft', 'Apple', 'Netflix', 'Adobe', 'Uber', 'LinkedIn', 
+  'Twitter', 'Salesforce', 'Oracle', 'IBM', 'Goldman Sachs', 'Bloomberg', 'Morgan Stanley', 'JPMorgan',
+  'Airbnb', 'Lyft', 'Snap', 'Pinterest', 'Dropbox', 'Stripe', 'PayPal', 'Walmart', 'eBay', 'Shopify',
+  'TCS', 'Infosys', 'Wipro', 'Flipkart', 'Paytm', 'Zomato', 'PhonePe', 'CRED', 'Nvidia', 'AMD', 'Intel',
+  'Tesla', 'SpaceX', 'Visa', 'Mastercard', 'Databricks', 'Snowflake', 'MongoDB', 'Atlassian'
+];
 
 export const CompanyFilter = ({ selectedCompany, onCompanyChange }: CompanyFilterProps) => {
   return (

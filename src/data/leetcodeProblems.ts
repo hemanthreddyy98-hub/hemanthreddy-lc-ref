@@ -418,7 +418,7 @@ const generateProblems = (): Problem[] => {
       acceptance: Math.floor(Math.random() * 40) + 30,
       frequency: Math.floor(Math.random() * 100),
       isPremium: Math.random() > 0.85,
-      url: `https://leetcode.com/problems/${slug}/`,
+      url: `https://leetcode.com/problemset/?search=${encodeURIComponent(title)}&page=1`,
       timeComplexity: complexity.time,
       spaceComplexity: complexity.space,
       approach: getApproach(topic.name),

@@ -1,4 +1,5 @@
-import { Github, Linkedin, ExternalLink, Code2, Trophy } from 'lucide-react';
+import { Github, Linkedin, ExternalLink, Code2, Trophy, Youtube } from 'lucide-react';
+import { Link } from 'react-router-dom';
 
 export const Footer = () => {
   return (
@@ -81,6 +82,15 @@ export const Footer = () => {
           <div>
             <h3 className="font-semibold text-sm mb-4 text-foreground">Resources</h3>
             <ul className="space-y-2">
+              <li>
+                <Link
+                  to="/video-manager"
+                  className="text-sm text-muted-foreground hover:text-primary transition-colors flex items-center gap-2"
+                >
+                  <Youtube className="h-3.5 w-3.5 text-red-500" />
+                  Video Manager (Admin)
+                </Link>
+              </li>
               <li>
                 <a
                   href="https://neetcode.io"

@@ -7,6 +7,7 @@ import { HeroSection } from '@/components/HeroSection';
 import { Footer } from '@/components/Footer';
 import { CompanyFilter } from '@/components/CompanyFilter';
 import { ContactBanner } from '@/components/ContactBanner';
+import { useProblemVideos } from '@/hooks/useProblemVideos';
 import { problems as allProblems, topics } from '@/data/leetcodeProblems';
 
 const PROBLEMS_PER_PAGE = 24;
@@ -20,6 +21,7 @@ const Index = () => {
   const [solved, setSolved] = useState<Set<number>>(new Set());
   const [isSidebarOpen, setIsSidebarOpen] = useState(false);
   const [visibleCount, setVisibleCount] = useState(PROBLEMS_PER_PAGE);
+  const { getVideoUrl } = useProblemVideos();
 
   const filteredProblems = useMemo(() => {
     return allProblems.filter((problem) => {
@@ -171,6 +173,7 @@ const Index = () => {
                       index={index}
                       isBookmarked={bookmarked.has(problem.id)}
                       isSolved={solved.has(problem.id)}
+                      videoUrl={getVideoUrl(problem.id)}
                       onToggleBookmark={handleToggleBookmark}
                       onToggleSolved={handleToggleSolved}
                     />

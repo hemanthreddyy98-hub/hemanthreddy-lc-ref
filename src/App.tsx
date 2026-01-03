@@ -8,6 +8,7 @@ import Index from "./pages/Index";
 import ResumeBuilder from "./pages/ResumeBuilder";
 import PortfolioGenerator from "./pages/PortfolioGenerator";
 import InterviewTranslator from "./pages/InterviewTranslator";
+import VideoManager from "./pages/VideoManager";
 import NotFound from "./pages/NotFound";
 
 const queryClient = new QueryClient();
@@ -24,6 +25,7 @@ const App = () => (
             <Route path="/resume" element={<ResumeBuilder />} />
             <Route path="/portfolio" element={<PortfolioGenerator />} />
             <Route path="/interview" element={<InterviewTranslator />} />
+            <Route path="/video-manager" element={<VideoManager />} />
             <Route path="*" element={<NotFound />} />
           </Routes>
         </BrowserRouter>

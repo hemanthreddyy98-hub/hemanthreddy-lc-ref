@@ -1,4 +1,4 @@
-import { Clock, HardDrive, ExternalLink, Bookmark, BookmarkCheck, Check, Lock, Lightbulb } from 'lucide-react';
+import { Clock, HardDrive, ExternalLink, Bookmark, BookmarkCheck, Check, Lock, Lightbulb, Youtube } from 'lucide-react';
 import { Problem } from '@/data/leetcodeProblems';
 import { cn } from '@/lib/utils';
 import { Button } from '@/components/ui/button';
@@ -8,6 +8,7 @@ interface ProblemCardProps {
   index: number;
   isBookmarked: boolean;
   isSolved: boolean;
+  videoUrl?: string;
   onToggleBookmark: (id: number) => void;
   onToggleSolved: (id: number) => void;
 }
@@ -17,6 +18,7 @@ export const ProblemCard = ({
   index,
   isBookmarked,
   isSolved,
+  videoUrl,
   onToggleBookmark,
   onToggleSolved,
 }: ProblemCardProps) => {
@@ -113,10 +115,22 @@ export const ProblemCard = ({
           className="flex-1"
         >
           <Button variant="outline" className="w-full gap-2 bg-primary/10 border-primary/30 text-primary hover:bg-primary/20">
-            Solve Problem
+            Solve
             <ExternalLink className="h-3.5 w-3.5" />
           </Button>
         </a>
+        
+        {videoUrl && (
+          <a
+            href={videoUrl}
+            target="_blank"
+            rel="noopener noreferrer"
+          >
+            <Button variant="outline" className="gap-2 bg-red-500/10 border-red-500/30 text-red-500 hover:bg-red-500/20">
+              <Youtube className="h-4 w-4" />
+            </Button>
+          </a>
+        )}
         
         <Button
           variant="ghost"

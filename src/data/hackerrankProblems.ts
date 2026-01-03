@@ -12,6 +12,8 @@ export interface HackerRankProblem {
   url: string;
   timeComplexity: string;
   spaceComplexity: string;
+  approach: string;
+  platform: 'hackerrank';
 }
 
 export interface Topic {
@@ -82,6 +84,32 @@ const getComplexity = (topic: string): { time: string; space: string } => {
   
   const topicPatterns = patterns[topic] || [{ time: 'O(n)', space: 'O(1)' }];
   return topicPatterns[Math.floor(Math.random() * topicPatterns.length)];
+};
+
+const getApproach = (topic: string): string => {
+  const approachPatterns: { [key: string]: string[] } = {
+    'Arrays': ['Use two pointers technique', 'Apply prefix sum approach', 'Use sliding window', 'Consider sorting first', 'Use hash map for O(1) lookup'],
+    'Strings': ['Use frequency counting', 'Apply two pointer technique', 'Consider using StringBuilder', 'Try pattern matching algorithm', 'Use hash map for character mapping'],
+    'Sorting': ['Choose appropriate sorting algorithm', 'Consider stable vs unstable sort', 'Use comparator for custom order', 'Try counting sort for bounded values', 'Apply merge sort for linked lists'],
+    'Search': ['Apply binary search', 'Use BFS for shortest path', 'Try DFS for exhaustive search', 'Consider hash-based lookup', 'Use ternary search for unimodal'],
+    'Graph Theory': ['Use BFS/DFS traversal', 'Apply Dijkstra for weighted graphs', 'Consider Union-Find for connectivity', 'Try Kruskal/Prim for MST', 'Use topological sort for DAG'],
+    'Dynamic Programming': ['Identify subproblems', 'Define state and transitions', 'Consider memoization vs tabulation', 'Optimize space if possible', 'Check for overlapping subproblems'],
+    'Greedy': ['Sort by optimal metric first', 'Make locally optimal choice', 'Prove greedy choice property', 'Consider interval scheduling', 'Use priority queue for efficiency'],
+    'Recursion': ['Identify base cases', 'Define recursive relation', 'Consider tail recursion', 'Use memoization to optimize', 'Apply divide and conquer'],
+    'Linked Lists': ['Use slow/fast pointers', 'Consider dummy node', 'Reverse in-place if needed', 'Handle edge cases carefully', 'Use recursion for elegant solution'],
+    'Stacks': ['Use monotonic stack pattern', 'Process elements in order', 'Consider using auxiliary stack', 'Handle balanced parentheses', 'Implement with array or linked list'],
+    'Queues': ['Use BFS pattern', 'Consider priority queue', 'Implement circular queue', 'Use deque for both ends', 'Process level by level'],
+    'Trees': ['Use tree traversal (inorder/preorder/postorder)', 'Consider iterative vs recursive', 'Apply level order with queue', 'Check tree properties recursively', 'Use parent pointers if needed'],
+    'Heaps': ['Use min/max heap appropriately', 'Consider heap for k-th element', 'Apply for merge k sorted', 'Use for median finding', 'Implement custom comparator'],
+    'Bit Manipulation': ['Use XOR properties', 'Apply bit masking', 'Check powers of two', 'Count set bits efficiently', 'Use left/right shift operators'],
+    'Mathematics': ['Apply modular arithmetic', 'Use mathematical formulas', 'Consider number theory concepts', 'Apply combinatorics', 'Check for edge cases with zero'],
+    'Implementation': ['Simulate the process', 'Handle edge cases', 'Optimize for constraints', 'Use appropriate data structures', 'Break into smaller functions'],
+    'Data Structures': ['Choose optimal data structure', 'Consider trade-offs', 'Implement with efficiency', 'Handle edge cases', 'Use built-in libraries when possible'],
+    'Algorithms': ['Analyze time complexity', 'Consider space trade-offs', 'Apply known algorithms', 'Optimize for given constraints', 'Test with edge cases'],
+  };
+  
+  const approaches = approachPatterns[topic] || ['Analyze the problem carefully', 'Consider edge cases', 'Optimize step by step'];
+  return approaches[Math.floor(Math.random() * approaches.length)];
 };
 
 const generateHackerRankProblems = (): HackerRankProblem[] => {
@@ -384,6 +412,8 @@ const generateHackerRankProblems = (): HackerRankProblem[] => {
       url: `https://www.hackerrank.com/challenges/${p.slug}/problem`,
       timeComplexity: p.time,
       spaceComplexity: p.space,
+      approach: getApproach(p.topic),
+      platform: 'hackerrank',
     });
   }
 
@@ -427,6 +457,8 @@ const generateHackerRankProblems = (): HackerRankProblem[] => {
       url: `https://www.hackerrank.com/challenges/${slug}/problem`,
       timeComplexity: complexity.time,
       spaceComplexity: complexity.space,
+      approach: getApproach(topic.name),
+      platform: 'hackerrank',
     });
   }
 

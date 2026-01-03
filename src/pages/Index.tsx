@@ -7,12 +7,16 @@ import { HeroSection } from '@/components/HeroSection';
 import { Footer } from '@/components/Footer';
 import { CompanyFilter } from '@/components/CompanyFilter';
 import { ContactBanner } from '@/components/ContactBanner';
+import { PlatformSwitcher, Platform } from '@/components/PlatformSwitcher';
 import { useProblemVideos } from '@/hooks/useProblemVideos';
-import { problems as allProblems, topics } from '@/data/leetcodeProblems';
+import { problems as leetcodeProblems, topics as leetcodeTopics } from '@/data/leetcodeProblems';
+import { hackerrankProblems, hackerrankTopics } from '@/data/hackerrankProblems';
+import { UnifiedProblem } from '@/types/problem';
 
 const PROBLEMS_PER_PAGE = 24;
 
 const Index = () => {
+  const [platform, setPlatform] = useState<Platform>('leetcode');
   const [searchQuery, setSearchQuery] = useState('');
   const [selectedTopic, setSelectedTopic] = useState('All');
   const [difficulty, setDifficulty] = useState('All');
@@ -22,6 +26,23 @@ const Index = () => {
   const [isSidebarOpen, setIsSidebarOpen] = useState(false);
   const [visibleCount, setVisibleCount] = useState(PROBLEMS_PER_PAGE);
   const { getVideoUrl } = useProblemVideos();
+
+  // Get problems and topics based on selected platform
+  const allProblems: UnifiedProblem[] = useMemo(() => {
+    if (platform === 'leetcode') {
+      return leetcodeProblems.map(p => ({
+        ...p,
+        hackerrankId: undefined,
+      }));
+    } else {
+      return hackerrankProblems.map(p => ({
+        ...p,
+        leetcodeId: undefined,
+      }));
+    }
+  }, [platform]);
+  
+  const topics = platform === 'leetcode' ? leetcodeTopics : hackerrankTopics;
 
   const filteredProblems = useMemo(() => {
     return allProblems.filter((problem) => {
@@ -33,7 +54,7 @@ const Index = () => {
           problem.topic.toLowerCase().includes(query) ||
           problem.subTopic.toLowerCase().includes(query) ||
           problem.companies.some((c) => c.toLowerCase().includes(query)) ||
-          problem.leetcodeId.toString().includes(query);
+          problem.id.toString().includes(query);
         if (!matchesSearch) return false;
       }
 
@@ -54,7 +75,7 @@ const Index = () => {
 
       return true;
     });
-  }, [searchQuery, selectedTopic, difficulty, selectedCompany]);
+  }, [allProblems, searchQuery, selectedTopic, difficulty, selectedCompany]);
 
   const visibleProblems = useMemo(() => {
     return filteredProblems.slice(0, visibleCount);
@@ -122,6 +143,7 @@ const Index = () => {
           selectedTopic={selectedTopic}
           onTopicSelect={handleTopicSelect}
           isOpen={isSidebarOpen}
+          platform={platform}
         />
 
         {/* Overlay for mobile */}
@@ -138,6 +160,20 @@ const Index = () => {
 
             {/* Contact Banner */}
             <ContactBanner />
+
+            {/* Platform Switcher */}
+            <div className="mb-6 flex justify-center">
+              <PlatformSwitcher
+                platform={platform}
+                onPlatformChange={(p) => {
+                  setPlatform(p);
+                  setSelectedTopic('All');
+                  setVisibleCount(PROBLEMS_PER_PAGE);
+                }}
+                leetcodeCount={leetcodeProblems.length}
+                hackerrankCount={hackerrankProblems.length}
+              />
+            </div>
 
             {/* Company Filter */}
             <div className="mb-6">

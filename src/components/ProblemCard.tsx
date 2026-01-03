@@ -1,10 +1,10 @@
 import { Clock, HardDrive, ExternalLink, Bookmark, BookmarkCheck, Check, Lock, Lightbulb, Youtube } from 'lucide-react';
-import { Problem } from '@/data/leetcodeProblems';
+import { UnifiedProblem } from '@/types/problem';
 import { cn } from '@/lib/utils';
 import { Button } from '@/components/ui/button';
 
 interface ProblemCardProps {
-  problem: Problem;
+  problem: UnifiedProblem;
   index: number;
   isBookmarked: boolean;
   isSolved: boolean;
@@ -40,8 +40,11 @@ export const ProblemCard = ({
       <div className="flex items-start justify-between mb-3">
         <div className="flex items-center gap-2">
           <span className="text-xs text-muted-foreground font-mono">#{problem.id}</span>
-          {problem.leetcodeId && (
-            <span className="text-xs text-primary font-mono">LC #{problem.leetcodeId}</span>
+          {problem.platform === 'leetcode' && problem.leetcodeId && (
+            <span className="text-xs text-[#FFA116] font-mono">LC #{problem.leetcodeId}</span>
+          )}
+          {problem.platform === 'hackerrank' && problem.hackerrankId && (
+            <span className="text-xs text-[#00EA64] font-mono">HR</span>
           )}
           {problem.isPremium && (
             <Lock className="h-3 w-3 text-warning" />

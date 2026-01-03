@@ -13,6 +13,7 @@ export interface Problem {
   timeComplexity: string;
   spaceComplexity: string;
   approach: string;
+  platform: 'leetcode';
 }
 
 export interface Topic {
@@ -372,6 +373,7 @@ const generateProblems = (): Problem[] => {
       timeComplexity: p.time,
       spaceComplexity: p.space,
       approach: p.approach,
+      platform: 'leetcode',
     });
   }
 
@@ -422,6 +424,7 @@ const generateProblems = (): Problem[] => {
       timeComplexity: complexity.time,
       spaceComplexity: complexity.space,
       approach: getApproach(topic.name),
+      platform: 'leetcode',
     });
   }
 

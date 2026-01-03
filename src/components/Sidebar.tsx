@@ -1,15 +1,19 @@
 import { ChevronRight } from 'lucide-react';
-import { topics, getTopicCounts } from '@/data/leetcodeProblems';
+import { topics as leetcodeTopics, getTopicCounts as getLeetcodeTopicCounts } from '@/data/leetcodeProblems';
+import { hackerrankTopics, getHackerRankTopicCounts } from '@/data/hackerrankProblems';
+import { Platform } from '@/components/PlatformSwitcher';
 import { cn } from '@/lib/utils';
 
 interface SidebarProps {
   selectedTopic: string;
   onTopicSelect: (topic: string) => void;
   isOpen: boolean;
+  platform: Platform;
 }
 
-export const Sidebar = ({ selectedTopic, onTopicSelect, isOpen }: SidebarProps) => {
-  const topicCounts = getTopicCounts();
+export const Sidebar = ({ selectedTopic, onTopicSelect, isOpen, platform }: SidebarProps) => {
+  const topics = platform === 'leetcode' ? leetcodeTopics : hackerrankTopics;
+  const topicCounts = platform === 'leetcode' ? getLeetcodeTopicCounts() : getHackerRankTopicCounts();
 
   return (
     <aside

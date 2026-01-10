@@ -8,17 +8,30 @@ import { Footer } from '@/components/Footer';
 import { CompanyFilter } from '@/components/CompanyFilter';
 import { ContactBanner } from '@/components/ContactBanner';
 import { PlatformSwitcher, Platform } from '@/components/PlatformSwitcher';
+import { SubtopicTabs } from '@/components/SubtopicTabs';
 import { useProblemVideos } from '@/hooks/useProblemVideos';
 import { problems as leetcodeProblems, topics as leetcodeTopics } from '@/data/leetcodeProblems';
 import { hackerrankProblems, hackerrankTopics } from '@/data/hackerrankProblems';
+import { gfgProblems, gfgTopics } from '@/data/gfgProblems';
+import { codechefProblems, codechefTopics } from '@/data/codechefProblems';
+import { codeforcesProblems, codeforcesTopics } from '@/data/codeforcesProblems';
 import { UnifiedProblem } from '@/types/problem';
 
 const PROBLEMS_PER_PAGE = 24;
+
+const platformData = {
+  leetcode: { problems: leetcodeProblems, topics: leetcodeTopics },
+  hackerrank: { problems: hackerrankProblems, topics: hackerrankTopics },
+  gfg: { problems: gfgProblems, topics: gfgTopics },
+  codechef: { problems: codechefProblems, topics: codechefTopics },
+  codeforces: { problems: codeforcesProblems, topics: codeforcesTopics },
+};
 
 const Index = () => {
   const [platform, setPlatform] = useState<Platform>('leetcode');
   const [searchQuery, setSearchQuery] = useState('');
   const [selectedTopic, setSelectedTopic] = useState('All');
+  const [selectedSubtopic, setSelectedSubtopic] = useState('All');
   const [difficulty, setDifficulty] = useState('All');
   const [selectedCompany, setSelectedCompany] = useState('All');
   const [bookmarked, setBookmarked] = useState<Set<number>>(new Set());
@@ -27,26 +40,29 @@ const Index = () => {
   const [visibleCount, setVisibleCount] = useState(PROBLEMS_PER_PAGE);
   const { getVideoUrl } = useProblemVideos();
 
-  // Get problems and topics based on selected platform
+  const platformCounts = useMemo(() => ({
+    leetcode: leetcodeProblems.length,
+    hackerrank: hackerrankProblems.length,
+    gfg: gfgProblems.length,
+    codechef: codechefProblems.length,
+    codeforces: codeforcesProblems.length,
+  }), []);
+
   const allProblems: UnifiedProblem[] = useMemo(() => {
-    if (platform === 'leetcode') {
-      return leetcodeProblems.map(p => ({
-        ...p,
-        hackerrankId: undefined,
-      }));
-    } else {
-      return hackerrankProblems.map(p => ({
-        ...p,
-        leetcodeId: undefined,
-      }));
-    }
+    const data = platformData[platform];
+    return data.problems.map(p => ({ ...p } as UnifiedProblem));
   }, [platform]);
   
-  const topics = platform === 'leetcode' ? leetcodeTopics : hackerrankTopics;
+  const topics = platformData[platform].topics;
+
+  const currentTopicSubtopics = useMemo(() => {
+    if (selectedTopic === 'All') return [];
+    const topic = topics.find(t => t.name === selectedTopic);
+    return topic?.subTopics || [];
+  }, [selectedTopic, topics]);
 
   const filteredProblems = useMemo(() => {
     return allProblems.filter((problem) => {
-      // Search filter
       if (searchQuery) {
         const query = searchQuery.toLowerCase();
         const matchesSearch =
@@ -57,38 +73,21 @@ const Index = () => {
           problem.id.toString().includes(query);
         if (!matchesSearch) return false;
       }
-
-      // Topic filter
-      if (selectedTopic !== 'All' && problem.topic !== selectedTopic) {
-        return false;
-      }
-
-      // Difficulty filter
-      if (difficulty !== 'All' && problem.difficulty !== difficulty) {
-        return false;
-      }
-
-      // Company filter
-      if (selectedCompany !== 'All' && !problem.companies.includes(selectedCompany)) {
-        return false;
-      }
-
+      if (selectedTopic !== 'All' && problem.topic !== selectedTopic) return false;
+      if (selectedSubtopic !== 'All' && problem.subTopic !== selectedSubtopic) return false;
+      if (difficulty !== 'All' && problem.difficulty !== difficulty) return false;
+      if (selectedCompany !== 'All' && !problem.companies.includes(selectedCompany)) return false;
       return true;
     });
-  }, [allProblems, searchQuery, selectedTopic, difficulty, selectedCompany]);
+  }, [allProblems, searchQuery, selectedTopic, selectedSubtopic, difficulty, selectedCompany]);
 
-  const visibleProblems = useMemo(() => {
-    return filteredProblems.slice(0, visibleCount);
-  }, [filteredProblems, visibleCount]);
+  const visibleProblems = useMemo(() => filteredProblems.slice(0, visibleCount), [filteredProblems, visibleCount]);
 
   const handleToggleBookmark = useCallback((id: number) => {
     setBookmarked((prev) => {
       const newSet = new Set(prev);
-      if (newSet.has(id)) {
-        newSet.delete(id);
-      } else {
-        newSet.add(id);
-      }
+      if (newSet.has(id)) newSet.delete(id);
+      else newSet.add(id);
       return newSet;
     });
   }, []);
@@ -96,32 +95,23 @@ const Index = () => {
   const handleToggleSolved = useCallback((id: number) => {
     setSolved((prev) => {
       const newSet = new Set(prev);
-      if (newSet.has(id)) {
-        newSet.delete(id);
-      } else {
-        newSet.add(id);
-      }
+      if (newSet.has(id)) newSet.delete(id);
+      else newSet.add(id);
       return newSet;
     });
   }, []);
 
-  const handleLoadMore = () => {
-    setVisibleCount((prev) => prev + PROBLEMS_PER_PAGE);
-  };
-
   const handleTopicSelect = (topic: string) => {
     setSelectedTopic(topic);
+    setSelectedSubtopic('All');
     setVisibleCount(PROBLEMS_PER_PAGE);
     setIsSidebarOpen(false);
   };
 
-  const handleDifficultyFilter = (diff: string) => {
-    setDifficulty(diff);
-    setVisibleCount(PROBLEMS_PER_PAGE);
-  };
-
-  const handleCompanyChange = (company: string) => {
-    setSelectedCompany(company);
+  const handlePlatformChange = (p: Platform) => {
+    setPlatform(p);
+    setSelectedTopic('All');
+    setSelectedSubtopic('All');
     setVisibleCount(PROBLEMS_PER_PAGE);
   };
 
@@ -131,7 +121,7 @@ const Index = () => {
         searchQuery={searchQuery}
         onSearchChange={setSearchQuery}
         difficulty={difficulty}
-        onDifficultyChange={handleDifficultyFilter}
+        onDifficultyChange={(d) => { setDifficulty(d); setVisibleCount(PROBLEMS_PER_PAGE); }}
         totalProblems={allProblems.length}
         filteredCount={filteredProblems.length}
         onMenuToggle={() => setIsSidebarOpen(!isSidebarOpen)}
@@ -139,94 +129,50 @@ const Index = () => {
       />
 
       <div className="flex flex-1">
-        <Sidebar
-          selectedTopic={selectedTopic}
-          onTopicSelect={handleTopicSelect}
-          isOpen={isSidebarOpen}
-          platform={platform}
-        />
-
-        {/* Overlay for mobile */}
+        <Sidebar selectedTopic={selectedTopic} onTopicSelect={handleTopicSelect} isOpen={isSidebarOpen} platform={platform} />
+        
         {isSidebarOpen && (
-          <div
-            className="fixed inset-0 bg-background/80 backdrop-blur-sm z-30 lg:hidden"
-            onClick={() => setIsSidebarOpen(false)}
-          />
+          <div className="fixed inset-0 bg-background/80 backdrop-blur-sm z-30 lg:hidden" onClick={() => setIsSidebarOpen(false)} />
         )}
 
         <main className="flex-1 lg:ml-0 min-w-0">
           <div className="max-w-7xl mx-auto px-4 lg:px-6 py-6">
-            <HeroSection onDifficultyFilter={handleDifficultyFilter} />
-
-            {/* Contact Banner */}
+            <HeroSection onDifficultyFilter={(d) => { setDifficulty(d); setVisibleCount(PROBLEMS_PER_PAGE); }} />
             <ContactBanner />
 
-            {/* Platform Switcher */}
             <div className="mb-6 flex justify-center">
-              <PlatformSwitcher
-                platform={platform}
-                onPlatformChange={(p) => {
-                  setPlatform(p);
-                  setSelectedTopic('All');
-                  setVisibleCount(PROBLEMS_PER_PAGE);
-                }}
-                leetcodeCount={leetcodeProblems.length}
-                hackerrankCount={hackerrankProblems.length}
-              />
+              <PlatformSwitcher platform={platform} onPlatformChange={handlePlatformChange} counts={platformCounts} />
             </div>
 
-            {/* Company Filter */}
             <div className="mb-6">
-              <CompanyFilter 
-                selectedCompany={selectedCompany} 
-                onCompanyChange={handleCompanyChange} 
-              />
+              <CompanyFilter selectedCompany={selectedCompany} onCompanyChange={(c) => { setSelectedCompany(c); setVisibleCount(PROBLEMS_PER_PAGE); }} />
             </div>
 
-            {/* Section Header */}
-            <div className="flex items-center gap-3 mb-6">
+            <div className="flex items-center gap-3 mb-4">
               <div className="flex items-center gap-2">
                 <Code2 className="h-5 w-5 text-primary" />
                 <h2 className="text-xl font-semibold text-foreground">
                   {selectedTopic === 'All' ? 'All Problems' : selectedTopic}
                 </h2>
               </div>
-              {selectedTopic !== 'All' && (
-                <span className="text-sm text-muted-foreground">
-                  {topics.find((t) => t.name === selectedTopic)?.subTopics.join(', ')}
-                </span>
-              )}
+              <span className="text-sm text-muted-foreground">({filteredProblems.length} problems)</span>
             </div>
 
-            {/* Problems Grid */}
+            {selectedTopic !== 'All' && currentTopicSubtopics.length > 0 && (
+              <SubtopicTabs subTopics={currentTopicSubtopics} selectedSubtopic={selectedSubtopic} onSubtopicSelect={(s) => { setSelectedSubtopic(s); setVisibleCount(PROBLEMS_PER_PAGE); }} />
+            )}
+
             {visibleProblems.length > 0 ? (
               <>
                 <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-4">
                   {visibleProblems.map((problem, index) => (
-                    <ProblemCard
-                      key={problem.id}
-                      problem={problem}
-                      index={index}
-                      isBookmarked={bookmarked.has(problem.id)}
-                      isSolved={solved.has(problem.id)}
-                      videoUrl={getVideoUrl(problem.id)}
-                      onToggleBookmark={handleToggleBookmark}
-                      onToggleSolved={handleToggleSolved}
-                    />
+                    <ProblemCard key={`${platform}-${problem.id}`} problem={problem} index={index} isBookmarked={bookmarked.has(problem.id)} isSolved={solved.has(problem.id)} videoUrl={getVideoUrl(problem.id)} onToggleBookmark={handleToggleBookmark} onToggleSolved={handleToggleSolved} />
                   ))}
                 </div>
-
-                {/* Load More */}
                 {visibleCount < filteredProblems.length && (
                   <div className="mt-8 text-center">
-                    <button
-                      onClick={handleLoadMore}
-                      className="px-8 py-3 rounded-xl bg-primary/10 border border-primary/30 text-primary font-medium hover:bg-primary/20 transition-all duration-200"
-                    >
-                      Load More Problems
-                      <span className="text-primary/70 ml-2">
-                        ({filteredProblems.length - visibleCount} remaining)
-                      </span>
+                    <button onClick={() => setVisibleCount((prev) => prev + PROBLEMS_PER_PAGE)} className="px-8 py-3 rounded-xl bg-primary/10 border border-primary/30 text-primary font-medium hover:bg-primary/20 transition-all">
+                      Load More ({filteredProblems.length - visibleCount} remaining)
                     </button>
                   </div>
                 )}
@@ -237,13 +183,10 @@ const Index = () => {
                   <Code2 className="h-8 w-8 text-muted-foreground" />
                 </div>
                 <h3 className="text-lg font-medium text-foreground mb-2">No problems found</h3>
-                <p className="text-muted-foreground">
-                  Try adjusting your search or filters to find what you're looking for.
-                </p>
+                <p className="text-muted-foreground">Try adjusting your search or filters.</p>
               </div>
             )}
           </div>
-
           <Footer />
         </main>
       </div>

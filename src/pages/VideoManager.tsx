@@ -1,11 +1,12 @@
 import { useState, useEffect } from 'react';
-import { ArrowLeft, Youtube, Plus, Trash2, Edit2, Save, X, Search } from 'lucide-react';
-import { Link } from 'react-router-dom';
+import { ArrowLeft, Youtube, Plus, Trash2, Edit2, Save, X, Search, Shield, LogOut } from 'lucide-react';
+import { Link, useNavigate } from 'react-router-dom';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { supabase } from '@/integrations/supabase/client';
 import { toast } from 'sonner';
 import { problems } from '@/data/leetcodeProblems';
+import { useAuth } from '@/hooks/useAuth';
 
 interface VideoLink {
   id: string;
@@ -16,6 +17,9 @@ interface VideoLink {
 }
 
 const VideoManager = () => {
+  const navigate = useNavigate();
+  const { user, isAdmin, loading: authLoading, signOut } = useAuth();
+  
   const [videoLinks, setVideoLinks] = useState<VideoLink[]>([]);
   const [loading, setLoading] = useState(true);
   const [searchQuery, setSearchQuery] = useState('');
@@ -25,8 +29,24 @@ const VideoManager = () => {
   const [editUrl, setEditUrl] = useState('');
 
   useEffect(() => {
-    fetchVideoLinks();
-  }, []);
+    if (!authLoading) {
+      if (!user) {
+        navigate('/auth');
+        return;
+      }
+      if (!isAdmin) {
+        toast.error('Access denied. Only admin can access Video Manager.');
+        navigate('/');
+        return;
+      }
+    }
+  }, [user, isAdmin, authLoading, navigate]);
+
+  useEffect(() => {
+    if (user && isAdmin) {
+      fetchVideoLinks();
+    }
+  }, [user, isAdmin]);
 
   const fetchVideoLinks = async () => {
     try {
@@ -145,6 +165,12 @@ const VideoManager = () => {
     }
   };
 
+  const handleSignOut = async () => {
+    await signOut();
+    toast.success('Signed out successfully');
+    navigate('/');
+  };
+
   const filteredVideos = videoLinks.filter(video => {
     const problemTitle = getProblemTitle(video.problem_id);
     return problemTitle.toLowerCase().includes(searchQuery.toLowerCase()) ||
@@ -155,6 +181,20 @@ const VideoManager = () => {
   const problemsWithoutVideos = problems.filter(
     p => !videoLinks.some(v => v.problem_id === p.id)
   ).slice(0, 10);
+
+  // Show loading state while checking auth
+  if (authLoading) {
+    return (
+      <div className="min-h-screen flex items-center justify-center bg-background">
+        <div className="animate-spin rounded-full h-12 w-12 border-t-2 border-b-2 border-primary"></div>
+      </div>
+    );
+  }
+
+  // Don't render if not authenticated or not admin
+  if (!user || !isAdmin) {
+    return null;
+  }
 
   return (
     <div className="min-h-screen bg-background">
@@ -170,10 +210,20 @@ const VideoManager = () => {
             <div className="flex items-center gap-2">
               <Youtube className="h-6 w-6 text-red-500" />
               <h1 className="text-xl font-bold text-foreground">Video Manager</h1>
+              <span className="flex items-center gap-1 px-2 py-1 text-xs rounded-full bg-primary/10 text-primary">
+                <Shield className="h-3 w-3" />
+                Admin
+              </span>
             </div>
-            <span className="text-sm text-muted-foreground ml-auto">
-              {videoLinks.length} videos uploaded
-            </span>
+            <div className="ml-auto flex items-center gap-4">
+              <span className="text-sm text-muted-foreground">
+                {videoLinks.length} videos • {user.email}
+              </span>
+              <Button variant="outline" size="sm" onClick={handleSignOut} className="gap-2">
+                <LogOut className="h-4 w-4" />
+                Sign Out
+              </Button>
+            </div>
           </div>
         </div>
       </header>

@@ -10,21 +10,21 @@ import { ContactBanner } from '@/components/ContactBanner';
 import { PlatformSwitcher, Platform } from '@/components/PlatformSwitcher';
 import { SubtopicTabs } from '@/components/SubtopicTabs';
 import { useProblemVideos } from '@/hooks/useProblemVideos';
-import { problems as leetcodeProblems, topics as leetcodeTopics } from '@/data/leetcodeProblems';
-import { hackerrankProblems, hackerrankTopics } from '@/data/hackerrankProblems';
-import { gfgProblems, gfgTopics } from '@/data/gfgProblems';
-import { codechefProblems, codechefTopics } from '@/data/codechefProblems';
-import { codeforcesProblems, codeforcesTopics } from '@/data/codeforcesProblems';
-import { UnifiedProblem } from '@/types/problem';
+import { useProblems } from '@/hooks/useProblems';
+import { topics as leetcodeTopics } from '@/data/leetcodeProblems';
+import { hackerrankTopics } from '@/data/hackerrankProblems';
+import { gfgTopics } from '@/data/gfgProblems';
+import { codechefTopics } from '@/data/codechefProblems';
+import { codeforcesTopics } from '@/data/codeforcesProblems';
 
 const PROBLEMS_PER_PAGE = 24;
 
-const platformData = {
-  leetcode: { problems: leetcodeProblems, topics: leetcodeTopics },
-  hackerrank: { problems: hackerrankProblems, topics: hackerrankTopics },
-  gfg: { problems: gfgProblems, topics: gfgTopics },
-  codechef: { problems: codechefProblems, topics: codechefTopics },
-  codeforces: { problems: codeforcesProblems, topics: codeforcesTopics },
+const platformTopics = {
+  leetcode: leetcodeTopics,
+  hackerrank: hackerrankTopics,
+  gfg: gfgTopics,
+  codechef: codechefTopics,
+  codeforces: codeforcesTopics,
 };
 
 const Index = () => {
@@ -39,21 +39,11 @@ const Index = () => {
   const [isSidebarOpen, setIsSidebarOpen] = useState(false);
   const [visibleCount, setVisibleCount] = useState(PROBLEMS_PER_PAGE);
   const { getVideoUrl } = useProblemVideos();
-
-  const platformCounts = useMemo(() => ({
-    leetcode: leetcodeProblems.length,
-    hackerrank: hackerrankProblems.length,
-    gfg: gfgProblems.length,
-    codechef: codechefProblems.length,
-    codeforces: codeforcesProblems.length,
-  }), []);
-
-  const allProblems: UnifiedProblem[] = useMemo(() => {
-    const data = platformData[platform];
-    return data.problems.map(p => ({ ...p } as UnifiedProblem));
-  }, [platform]);
   
-  const topics = platformData[platform].topics;
+  // Fetch problems from database with static fallback
+  const { problems: allProblems, platformCounts } = useProblems(platform);
+  
+  const topics = platformTopics[platform];
 
   const currentTopicSubtopics = useMemo(() => {
     if (selectedTopic === 'All') return [];

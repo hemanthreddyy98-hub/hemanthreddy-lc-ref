@@ -10,6 +10,7 @@ import ResumeBuilder from "./pages/ResumeBuilder";
 import PortfolioGenerator from "./pages/PortfolioGenerator";
 import InterviewTranslator from "./pages/InterviewTranslator";
 import VideoManager from "./pages/VideoManager";
+import ProblemManager from "./pages/ProblemManager";
 import Auth from "./pages/Auth";
 import NotFound from "./pages/NotFound";
 
@@ -30,6 +31,7 @@ const App = () => (
               <Route path="/portfolio" element={<PortfolioGenerator />} />
               <Route path="/interview" element={<InterviewTranslator />} />
               <Route path="/video-manager" element={<VideoManager />} />
+              <Route path="/problem-manager" element={<ProblemManager />} />
               <Route path="*" element={<NotFound />} />
             </Routes>
           </BrowserRouter>

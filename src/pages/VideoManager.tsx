@@ -8,6 +8,13 @@ import { toast } from 'sonner';
 import { problems } from '@/data/leetcodeProblems';
 import { useAuth } from '@/hooks/useAuth';
 
+// Strict YouTube URL validation regex
+const YOUTUBE_URL_REGEX = /^(https?:\/\/)?(www\.)?(youtube\.com\/(watch\?v=|embed\/|v\/)|youtu\.be\/)[a-zA-Z0-9_-]{11}(&[a-zA-Z0-9_=-]*)*$/;
+
+const isValidYoutubeUrl = (url: string): boolean => {
+  return YOUTUBE_URL_REGEX.test(url.trim());
+};
+
 interface VideoLink {
   id: string;
   problem_id: number;
@@ -18,7 +25,7 @@ interface VideoLink {
 
 const VideoManager = () => {
   const navigate = useNavigate();
-  const { user, isAdmin, loading: authLoading, signOut } = useAuth();
+  const { user, isAdmin, loading: authLoading, adminCheckComplete, signOut } = useAuth();
   
   const [videoLinks, setVideoLinks] = useState<VideoLink[]>([]);
   const [loading, setLoading] = useState(true);
@@ -29,7 +36,8 @@ const VideoManager = () => {
   const [editUrl, setEditUrl] = useState('');
 
   useEffect(() => {
-    if (!authLoading) {
+    // Wait for both auth loading AND admin check to complete
+    if (!authLoading && adminCheckComplete) {
       if (!user) {
         navigate('/auth');
         return;
@@ -40,13 +48,13 @@ const VideoManager = () => {
         return;
       }
     }
-  }, [user, isAdmin, authLoading, navigate]);
+  }, [user, isAdmin, authLoading, adminCheckComplete, navigate]);
 
   useEffect(() => {
-    if (user && isAdmin) {
+    if (user && isAdmin && adminCheckComplete) {
       fetchVideoLinks();
     }
-  }, [user, isAdmin]);
+  }, [user, isAdmin, adminCheckComplete]);
 
   const fetchVideoLinks = async () => {
     try {
@@ -89,9 +97,9 @@ const VideoManager = () => {
       return;
     }
 
-    // Validate YouTube URL
-    if (!newYoutubeUrl.includes('youtube.com') && !newYoutubeUrl.includes('youtu.be')) {
-      toast.error('Please enter a valid YouTube URL');
+    // Strict YouTube URL validation
+    if (!isValidYoutubeUrl(newYoutubeUrl)) {
+      toast.error('Please enter a valid YouTube URL (e.g., https://www.youtube.com/watch?v=VIDEO_ID)');
       return;
     }
 
@@ -100,7 +108,7 @@ const VideoManager = () => {
         .from('problem_videos')
         .insert({
           problem_id: problemId,
-          youtube_url: newYoutubeUrl,
+          youtube_url: newYoutubeUrl.trim(),
           title: problem.title
         });
 
@@ -129,10 +137,16 @@ const VideoManager = () => {
       return;
     }
 
+    // Strict YouTube URL validation
+    if (!isValidYoutubeUrl(editUrl)) {
+      toast.error('Please enter a valid YouTube URL (e.g., https://www.youtube.com/watch?v=VIDEO_ID)');
+      return;
+    }
+
     try {
       const { error } = await supabase
         .from('problem_videos')
-        .update({ youtube_url: editUrl })
+        .update({ youtube_url: editUrl.trim() })
         .eq('id', id);
 
       if (error) throw error;
@@ -182,8 +196,8 @@ const VideoManager = () => {
     p => !videoLinks.some(v => v.problem_id === p.id)
   ).slice(0, 10);
 
-  // Show loading state while checking auth
-  if (authLoading) {
+  // Show loading state while checking auth OR admin status
+  if (authLoading || !adminCheckComplete) {
     return (
       <div className="min-h-screen flex items-center justify-center bg-background">
         <div className="animate-spin rounded-full h-12 w-12 border-t-2 border-b-2 border-primary"></div>

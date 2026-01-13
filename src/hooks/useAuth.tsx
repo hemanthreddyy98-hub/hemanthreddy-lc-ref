@@ -7,6 +7,7 @@ interface AuthContextType {
   session: Session | null;
   loading: boolean;
   isAdmin: boolean;
+  adminCheckComplete: boolean;
   signIn: (email: string, password: string) => Promise<{ error: Error | null }>;
   signUp: (email: string, password: string) => Promise<{ error: Error | null }>;
   signOut: () => Promise<void>;
@@ -19,9 +20,11 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
   const [session, setSession] = useState<Session | null>(null);
   const [loading, setLoading] = useState(true);
   const [isAdmin, setIsAdmin] = useState(false);
+  const [adminCheckComplete, setAdminCheckComplete] = useState(false);
 
   const checkAdminRole = async (userId: string) => {
     try {
+      setAdminCheckComplete(false);
       const { data, error } = await supabase
         .from('user_roles')
         .select('role')
@@ -31,13 +34,14 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
       if (error) {
         console.error('Error checking admin role:', error);
         setIsAdmin(false);
-        return;
+      } else {
+        setIsAdmin(data?.role === 'admin');
       }
-
-      setIsAdmin(data?.role === 'admin');
     } catch (err) {
       console.error('Error in checkAdminRole:', err);
       setIsAdmin(false);
+    } finally {
+      setAdminCheckComplete(true);
     }
   };
 
@@ -55,6 +59,7 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
           }, 0);
         } else {
           setIsAdmin(false);
+          setAdminCheckComplete(true);
         }
         
         setLoading(false);
@@ -100,10 +105,11 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
   const signOut = async () => {
     await supabase.auth.signOut();
     setIsAdmin(false);
+    setAdminCheckComplete(false);
   };
 
   return (
-    <AuthContext.Provider value={{ user, session, loading, isAdmin, signIn, signUp, signOut }}>
+    <AuthContext.Provider value={{ user, session, loading, isAdmin, adminCheckComplete, signIn, signUp, signOut }}>
       {children}
     </AuthContext.Provider>
   );

@@ -15,7 +15,7 @@ const passwordSchema = z.string().min(6, 'Password must be at least 6 characters
 
 const Auth = () => {
   const navigate = useNavigate();
-  const { user, isAdmin, loading } = useAuth();
+  const { user, isAdmin, loading, adminCheckComplete } = useAuth();
   const { signIn, signUp } = useAuth();
   
   const [email, setEmail] = useState('');
@@ -26,15 +26,16 @@ const Auth = () => {
   const [activeTab, setActiveTab] = useState('login');
 
   useEffect(() => {
-    if (!loading && user) {
+    // Only redirect after auth is fully loaded AND admin check is complete
+    if (!loading && user && adminCheckComplete) {
       if (isAdmin) {
         navigate('/video-manager');
       } else {
-        toast.error('Access denied. Only admin can access Video Manager.');
+        toast.error('Access denied. Only admin can access admin pages.');
         navigate('/');
       }
     }
-  }, [user, isAdmin, loading, navigate]);
+  }, [user, isAdmin, loading, adminCheckComplete, navigate]);
 
   const validateInputs = (isSignUp: boolean = false) => {
     try {
@@ -124,7 +125,7 @@ const Auth = () => {
           </div>
           <CardTitle className="text-2xl font-bold">Admin Authentication</CardTitle>
           <CardDescription>
-            Sign in to access the Video Manager
+            Sign in to access admin features
           </CardDescription>
         </CardHeader>
 
@@ -145,7 +146,7 @@ const Auth = () => {
                   <Input
                     id="email"
                     type="email"
-                    placeholder="reddyhemanth694@gmail.com"
+                    placeholder="your@email.com"
                     value={email}
                     onChange={(e) => setEmail(e.target.value)}
                     required
@@ -243,7 +244,7 @@ const Auth = () => {
                   />
                 </div>
                 <p className="text-xs text-muted-foreground">
-                  Only <strong>reddyhemanth694@gmail.com</strong> will receive admin access.
+                  Admin access is granted based on your account permissions.
                 </p>
               </CardContent>
               <CardFooter>

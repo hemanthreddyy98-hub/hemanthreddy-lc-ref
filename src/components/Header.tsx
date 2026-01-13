@@ -1,7 +1,16 @@
-import { Search, Code2, Menu, X } from 'lucide-react';
-import { useState } from 'react';
+import { Search, Code2, Menu, X, Shield, Youtube, ListChecks, LogIn, LogOut } from 'lucide-react';
+import { Link } from 'react-router-dom';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
+import { useAuth } from '@/hooks/useAuth';
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuSeparator,
+  DropdownMenuTrigger,
+} from '@/components/ui/dropdown-menu';
+import { toast } from 'sonner';
 
 interface HeaderProps {
   searchQuery: string;
@@ -24,7 +33,13 @@ export const Header = ({
   onMenuToggle,
   isSidebarOpen
 }: HeaderProps) => {
+  const { user, isAdmin, adminCheckComplete, signOut } = useAuth();
   const difficulties = ['All', 'Easy', 'Medium', 'Hard'];
+
+  const handleSignOut = async () => {
+    await signOut();
+    toast.success('Signed out successfully');
+  };
 
   return (
     <header className="sticky top-0 z-50 bg-background/95 backdrop-blur-md border-b border-border/50">
@@ -64,7 +79,7 @@ export const Header = ({
           </div>
         </div>
 
-        {/* Difficulty Filters & Count */}
+        {/* Difficulty Filters & Count & Admin */}
         <div className="flex items-center gap-3">
           <div className="hidden md:flex items-center gap-2">
             {difficulties.map((diff) => (
@@ -87,6 +102,44 @@ export const Header = ({
               Showing <span className="text-foreground font-medium">{filteredCount.toLocaleString()}</span> of {totalProblems.toLocaleString()}
             </span>
           </div>
+
+          {/* Admin Menu or Login Button */}
+          {user && isAdmin && adminCheckComplete ? (
+            <DropdownMenu>
+              <DropdownMenuTrigger asChild>
+                <Button variant="outline" size="sm" className="gap-2">
+                  <Shield className="h-4 w-4 text-primary" />
+                  <span className="hidden sm:inline">Admin</span>
+                </Button>
+              </DropdownMenuTrigger>
+              <DropdownMenuContent align="end" className="w-48">
+                <DropdownMenuItem asChild>
+                  <Link to="/video-manager" className="flex items-center gap-2 cursor-pointer">
+                    <Youtube className="h-4 w-4" />
+                    Video Manager
+                  </Link>
+                </DropdownMenuItem>
+                <DropdownMenuItem asChild>
+                  <Link to="/problem-manager" className="flex items-center gap-2 cursor-pointer">
+                    <ListChecks className="h-4 w-4" />
+                    Problem Manager
+                  </Link>
+                </DropdownMenuItem>
+                <DropdownMenuSeparator />
+                <DropdownMenuItem onClick={handleSignOut} className="flex items-center gap-2 cursor-pointer text-destructive">
+                  <LogOut className="h-4 w-4" />
+                  Sign Out
+                </DropdownMenuItem>
+              </DropdownMenuContent>
+            </DropdownMenu>
+          ) : !user ? (
+            <Link to="/auth">
+              <Button variant="ghost" size="sm" className="gap-2">
+                <LogIn className="h-4 w-4" />
+                <span className="hidden sm:inline">Admin</span>
+              </Button>
+            </Link>
+          ) : null}
         </div>
       </div>
     </header>

@@ -6,6 +6,7 @@ import { ProblemCard } from '@/components/ProblemCard';
 import { HeroSection } from '@/components/HeroSection';
 import { Footer } from '@/components/Footer';
 import { CompanyFilter } from '@/components/CompanyFilter';
+import { YearFilter } from '@/components/YearFilter';
 import { ContactBanner } from '@/components/ContactBanner';
 import { PlatformSwitcher, Platform } from '@/components/PlatformSwitcher';
 import { SubtopicTabs } from '@/components/SubtopicTabs';
@@ -34,6 +35,7 @@ const Index = () => {
   const [selectedSubtopic, setSelectedSubtopic] = useState('All');
   const [difficulty, setDifficulty] = useState('All');
   const [selectedCompanies, setSelectedCompanies] = useState<string[]>([]);
+  const [selectedYears, setSelectedYears] = useState<number[]>([]);
   const [bookmarked, setBookmarked] = useState<Set<number>>(new Set());
   const [solved, setSolved] = useState<Set<number>>(new Set());
   const [isSidebarOpen, setIsSidebarOpen] = useState(false);
@@ -51,6 +53,24 @@ const Index = () => {
     return topic?.subTopics || [];
   }, [selectedTopic, topics]);
 
+  // Get available years based on selected companies
+  const availableYears = useMemo(() => {
+    if (selectedCompanies.length === 0) return [];
+    
+    const yearsSet = new Set<number>();
+    allProblems.forEach(problem => {
+      if (problem.companyYears) {
+        selectedCompanies.forEach(company => {
+          const years = problem.companyYears?.[company];
+          if (years) {
+            years.forEach(year => yearsSet.add(year));
+          }
+        });
+      }
+    });
+    return Array.from(yearsSet).sort((a, b) => b - a);
+  }, [allProblems, selectedCompanies]);
+
   const filteredProblems = useMemo(() => {
     return allProblems.filter((problem) => {
       if (searchQuery) {
@@ -67,9 +87,19 @@ const Index = () => {
       if (selectedSubtopic !== 'All' && problem.subTopic !== selectedSubtopic) return false;
       if (difficulty !== 'All' && problem.difficulty !== difficulty) return false;
       if (selectedCompanies.length > 0 && !selectedCompanies.some(sc => problem.companies.includes(sc))) return false;
+      
+      // Year filter: only apply when companies and years are selected
+      if (selectedCompanies.length > 0 && selectedYears.length > 0) {
+        const hasMatchingYear = selectedCompanies.some(company => {
+          const years = problem.companyYears?.[company];
+          return years && years.some(year => selectedYears.includes(year));
+        });
+        if (!hasMatchingYear) return false;
+      }
+      
       return true;
     });
-  }, [allProblems, searchQuery, selectedTopic, selectedSubtopic, difficulty, selectedCompanies]);
+  }, [allProblems, searchQuery, selectedTopic, selectedSubtopic, difficulty, selectedCompanies, selectedYears]);
 
   const visibleProblems = useMemo(() => filteredProblems.slice(0, visibleCount), [filteredProblems, visibleCount]);
 
@@ -135,8 +165,19 @@ const Index = () => {
             </div>
 
             <div className="mb-6">
-              <CompanyFilter selectedCompanies={selectedCompanies} onCompaniesChange={(c) => { setSelectedCompanies(c); setVisibleCount(PROBLEMS_PER_PAGE); }} />
+              <CompanyFilter selectedCompanies={selectedCompanies} onCompaniesChange={(c) => { setSelectedCompanies(c); setSelectedYears([]); setVisibleCount(PROBLEMS_PER_PAGE); }} />
             </div>
+
+            {/* Year filter - only visible when companies are selected */}
+            {selectedCompanies.length > 0 && availableYears.length > 0 && (
+              <div className="mb-6">
+                <YearFilter 
+                  selectedYears={selectedYears} 
+                  onYearsChange={(y) => { setSelectedYears(y); setVisibleCount(PROBLEMS_PER_PAGE); }} 
+                  availableYears={availableYears} 
+                />
+              </div>
+            )}
 
             <div className="flex items-center gap-3 mb-4">
               <div className="flex items-center gap-2">
@@ -156,7 +197,7 @@ const Index = () => {
               <>
                 <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-4">
                   {visibleProblems.map((problem, index) => (
-                    <ProblemCard key={`${platform}-${problem.id}`} problem={problem} index={index} isBookmarked={bookmarked.has(problem.id)} isSolved={solved.has(problem.id)} videoUrl={getVideoUrl(problem.id)} onToggleBookmark={handleToggleBookmark} onToggleSolved={handleToggleSolved} />
+                    <ProblemCard key={`${platform}-${problem.id}`} problem={problem} index={index} isBookmarked={bookmarked.has(problem.id)} isSolved={solved.has(problem.id)} videoUrl={getVideoUrl(problem.id)} onToggleBookmark={handleToggleBookmark} onToggleSolved={handleToggleSolved} selectedCompanies={selectedCompanies} />
                   ))}
                 </div>
                 {visibleCount < filteredProblems.length && (

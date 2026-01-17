@@ -25,6 +25,7 @@ interface DbProblem {
   topic: string;
   sub_topic: string;
   companies: string[];
+  company_years: unknown;
   acceptance: number;
   frequency: number;
   is_premium: boolean;
@@ -37,6 +38,11 @@ interface DbProblem {
   rating: number | null;
 }
 
+const parseCompanyYears = (data: unknown): Record<string, number[]> | undefined => {
+  if (!data || typeof data !== 'object') return undefined;
+  return data as Record<string, number[]>;
+};
+
 const mapDbProblemToUnified = (p: DbProblem): UnifiedProblem => ({
   id: p.id,
   title: p.title,
@@ -44,6 +50,7 @@ const mapDbProblemToUnified = (p: DbProblem): UnifiedProblem => ({
   topic: p.topic,
   subTopic: p.sub_topic,
   companies: p.companies || [],
+  companyYears: parseCompanyYears(p.company_years),
   acceptance: p.acceptance,
   frequency: p.frequency,
   isPremium: p.is_premium,

@@ -11,6 +11,7 @@ interface ProblemCardProps {
   videoUrl?: string;
   onToggleBookmark: (id: number) => void;
   onToggleSolved: (id: number) => void;
+  selectedCompanies?: string[];
 }
 
 export const ProblemCard = ({
@@ -21,6 +22,7 @@ export const ProblemCard = ({
   videoUrl,
   onToggleBookmark,
   onToggleSolved,
+  selectedCompanies = [],
 }: ProblemCardProps) => {
   const difficultyClass = {
     Easy: 'difficulty-easy',
@@ -95,14 +97,23 @@ export const ProblemCard = ({
         )}
       </div>
 
-      {/* Companies */}
+      {/* Companies with year info when filtered */}
       {problem.companies.length > 0 && (
         <div className="flex flex-wrap gap-1.5 mb-4">
-          {problem.companies.slice(0, 3).map((company) => (
-            <span key={company} className="company-tag">
-              {company}
-            </span>
-          ))}
+          {problem.companies.slice(0, 3).map((company) => {
+            const years = problem.companyYears?.[company];
+            const showYears = selectedCompanies.length > 0 && selectedCompanies.includes(company) && years && years.length > 0;
+            return (
+              <span key={company} className="company-tag flex items-center gap-1">
+                {company}
+                {showYears && (
+                  <span className="text-[10px] text-primary font-medium ml-0.5">
+                    ({years.sort((a, b) => b - a).slice(0, 2).join(', ')})
+                  </span>
+                )}
+              </span>
+            );
+          })}
           {problem.companies.length > 3 && (
             <span className="company-tag">+{problem.companies.length - 3} more</span>
           )}

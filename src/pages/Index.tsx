@@ -33,7 +33,7 @@ const Index = () => {
   const [selectedTopic, setSelectedTopic] = useState('All');
   const [selectedSubtopic, setSelectedSubtopic] = useState('All');
   const [difficulty, setDifficulty] = useState('All');
-  const [selectedCompany, setSelectedCompany] = useState('All');
+  const [selectedCompanies, setSelectedCompanies] = useState<string[]>([]);
   const [bookmarked, setBookmarked] = useState<Set<number>>(new Set());
   const [solved, setSolved] = useState<Set<number>>(new Set());
   const [isSidebarOpen, setIsSidebarOpen] = useState(false);
@@ -66,10 +66,10 @@ const Index = () => {
       if (selectedTopic !== 'All' && problem.topic !== selectedTopic) return false;
       if (selectedSubtopic !== 'All' && problem.subTopic !== selectedSubtopic) return false;
       if (difficulty !== 'All' && problem.difficulty !== difficulty) return false;
-      if (selectedCompany !== 'All' && !problem.companies.includes(selectedCompany)) return false;
+      if (selectedCompanies.length > 0 && !selectedCompanies.some(sc => problem.companies.includes(sc))) return false;
       return true;
     });
-  }, [allProblems, searchQuery, selectedTopic, selectedSubtopic, difficulty, selectedCompany]);
+  }, [allProblems, searchQuery, selectedTopic, selectedSubtopic, difficulty, selectedCompanies]);
 
   const visibleProblems = useMemo(() => filteredProblems.slice(0, visibleCount), [filteredProblems, visibleCount]);
 
@@ -135,7 +135,7 @@ const Index = () => {
             </div>
 
             <div className="mb-6">
-              <CompanyFilter selectedCompany={selectedCompany} onCompanyChange={(c) => { setSelectedCompany(c); setVisibleCount(PROBLEMS_PER_PAGE); }} />
+              <CompanyFilter selectedCompanies={selectedCompanies} onCompaniesChange={(c) => { setSelectedCompanies(c); setVisibleCount(PROBLEMS_PER_PAGE); }} />
             </div>
 
             <div className="flex items-center gap-3 mb-4">

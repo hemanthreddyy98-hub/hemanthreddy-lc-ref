@@ -29,8 +29,8 @@ import {
 } from '@/data/companies';
 
 interface CompanyFilterProps {
-  selectedCompany: string;
-  onCompanyChange: (company: string) => void;
+  selectedCompanies: string[];
+  onCompaniesChange: (companies: string[]) => void;
 }
 
 // Company categories for organized display
@@ -56,11 +56,11 @@ const companyCategories = [
 
 // Quick filter popular companies
 const popularCompanies = [
-  'All', 'Google', 'Amazon', 'Microsoft', 'Meta', 'Apple', 'Netflix', 
+  'Google', 'Amazon', 'Microsoft', 'Meta', 'Apple', 'Netflix', 
   'Flipkart', 'Goldman Sachs', 'Uber', 'Adobe', 'Paytm', 'Razorpay'
 ];
 
-export const CompanyFilter = ({ selectedCompany, onCompanyChange }: CompanyFilterProps) => {
+export const CompanyFilter = ({ selectedCompanies, onCompaniesChange }: CompanyFilterProps) => {
   const [open, setOpen] = useState(false);
   const [searchQuery, setSearchQuery] = useState('');
 
@@ -84,14 +84,24 @@ export const CompanyFilter = ({ selectedCompany, onCompanyChange }: CompanyFilte
       .filter(cat => cat.companies.length > 0);
   }, [searchQuery]);
 
-  const handleSelect = (company: string) => {
-    onCompanyChange(company);
-    setOpen(false);
-    setSearchQuery('');
+  const isSelected = (company: string) => selectedCompanies.includes(company);
+  const hasNoFilter = selectedCompanies.length === 0;
+
+  const toggleCompany = (company: string) => {
+    if (isSelected(company)) {
+      onCompaniesChange(selectedCompanies.filter(c => c !== company));
+    } else {
+      onCompaniesChange([...selectedCompanies, company]);
+    }
   };
 
-  const clearFilter = () => {
-    onCompanyChange('All');
+  const clearAll = () => {
+    onCompaniesChange([]);
+    setOpen(false);
+  };
+
+  const removeCompany = (company: string) => {
+    onCompaniesChange(selectedCompanies.filter(c => c !== company));
   };
 
   return (
@@ -100,12 +110,24 @@ export const CompanyFilter = ({ selectedCompany, onCompanyChange }: CompanyFilte
       <div className="flex items-center gap-2 overflow-x-auto pb-2 scrollbar-hide">
         <Building2 className="h-4 w-4 text-muted-foreground flex-shrink-0" />
         <div className="flex gap-2">
+          {/* All button */}
+          <button
+            onClick={clearAll}
+            className={`px-3 py-1.5 rounded-lg text-sm font-medium whitespace-nowrap transition-all duration-200 ${
+              hasNoFilter
+                ? 'bg-primary text-primary-foreground shadow-sm'
+                : 'bg-secondary/50 text-muted-foreground hover:bg-secondary hover:text-foreground border border-border/50'
+            }`}
+          >
+            All
+          </button>
+          
           {popularCompanies.map((company) => (
             <button
               key={company}
-              onClick={() => onCompanyChange(company)}
+              onClick={() => toggleCompany(company)}
               className={`px-3 py-1.5 rounded-lg text-sm font-medium whitespace-nowrap transition-all duration-200 ${
-                selectedCompany === company
+                isSelected(company)
                   ? 'bg-primary text-primary-foreground shadow-sm'
                   : 'bg-secondary/50 text-muted-foreground hover:bg-secondary hover:text-foreground border border-border/50'
               }`}
@@ -123,6 +145,11 @@ export const CompanyFilter = ({ selectedCompany, onCompanyChange }: CompanyFilte
                 className="gap-1 whitespace-nowrap"
               >
                 <span>More Companies</span>
+                {selectedCompanies.filter(c => !popularCompanies.includes(c)).length > 0 && (
+                  <Badge variant="secondary" className="ml-1 h-5 px-1.5 text-xs">
+                    +{selectedCompanies.filter(c => !popularCompanies.includes(c)).length}
+                  </Badge>
+                )}
                 <ChevronDown className="h-3 w-3" />
               </Button>
             </PopoverTrigger>
@@ -144,25 +171,29 @@ export const CompanyFilter = ({ selectedCompany, onCompanyChange }: CompanyFilte
                 </div>
               </div>
 
+              {/* Selection summary */}
+              {selectedCompanies.length > 0 && (
+                <div className="p-2 border-b border-border bg-secondary/30">
+                  <div className="flex items-center justify-between">
+                    <span className="text-xs text-muted-foreground">
+                      {selectedCompanies.length} selected
+                    </span>
+                    <button
+                      onClick={clearAll}
+                      className="text-xs text-primary hover:underline"
+                    >
+                      Clear all
+                    </button>
+                  </div>
+                </div>
+              )}
+
               {/* Company list */}
               <ScrollArea className="h-[400px]">
                 <div className="p-2">
-                  {/* All option */}
-                  <button
-                    onClick={() => handleSelect('All')}
-                    className={`w-full flex items-center justify-between px-3 py-2 rounded-md text-sm transition-colors ${
-                      selectedCompany === 'All'
-                        ? 'bg-primary/10 text-primary'
-                        : 'hover:bg-secondary/80 text-foreground'
-                    }`}
-                  >
-                    <span className="font-medium">All Companies</span>
-                    {selectedCompany === 'All' && <Check className="h-4 w-4" />}
-                  </button>
-
                   {/* Categories */}
                   {filteredCategories.map((category) => (
-                    <div key={category.name} className="mt-3">
+                    <div key={category.name} className="mt-3 first:mt-0">
                       <div className="px-3 py-1.5 text-xs font-semibold text-muted-foreground uppercase tracking-wider">
                         {category.name}
                       </div>
@@ -170,15 +201,15 @@ export const CompanyFilter = ({ selectedCompany, onCompanyChange }: CompanyFilte
                         {category.companies.map((company) => (
                           <button
                             key={company}
-                            onClick={() => handleSelect(company)}
+                            onClick={() => toggleCompany(company)}
                             className={`flex items-center justify-between px-3 py-1.5 rounded-md text-sm transition-colors truncate ${
-                              selectedCompany === company
+                              isSelected(company)
                                 ? 'bg-primary/10 text-primary'
                                 : 'hover:bg-secondary/80 text-foreground'
                             }`}
                           >
                             <span className="truncate">{company}</span>
-                            {selectedCompany === company && <Check className="h-3 w-3 flex-shrink-0 ml-1" />}
+                            {isSelected(company) && <Check className="h-3 w-3 flex-shrink-0 ml-1" />}
                           </button>
                         ))}
                       </div>
@@ -204,20 +235,28 @@ export const CompanyFilter = ({ selectedCompany, onCompanyChange }: CompanyFilte
         </div>
       </div>
 
-      {/* Show selected company badge if not "All" and not in popular list */}
-      {selectedCompany !== 'All' && !popularCompanies.includes(selectedCompany) && (
-        <div className="flex items-center gap-2">
+      {/* Show selected companies badges */}
+      {selectedCompanies.length > 0 && (
+        <div className="flex items-center gap-2 flex-wrap">
           <span className="text-sm text-muted-foreground">Filtering by:</span>
-          <Badge variant="secondary" className="gap-1 pr-1">
-            <Building2 className="h-3 w-3" />
-            {selectedCompany}
-            <button 
-              onClick={clearFilter}
-              className="ml-1 hover:bg-secondary rounded p-0.5"
-            >
-              <X className="h-3 w-3" />
-            </button>
-          </Badge>
+          {selectedCompanies.map((company) => (
+            <Badge key={company} variant="secondary" className="gap-1 pr-1">
+              <Building2 className="h-3 w-3" />
+              {company}
+              <button 
+                onClick={() => removeCompany(company)}
+                className="ml-1 hover:bg-secondary rounded p-0.5"
+              >
+                <X className="h-3 w-3" />
+              </button>
+            </Badge>
+          ))}
+          <button
+            onClick={clearAll}
+            className="text-xs text-muted-foreground hover:text-foreground transition-colors"
+          >
+            Clear all
+          </button>
         </div>
       )}
     </div>

@@ -6,6 +6,7 @@ export interface UnifiedProblem {
   topic: string;
   subTopic: string;
   companies: string[];
+  companyYears?: Record<string, number[]>; // Maps company name to years they asked this question
   acceptance: number;
   frequency: number;
   isPremium: boolean;

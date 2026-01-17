@@ -46,6 +46,7 @@ export type Database = {
           acceptance: number | null
           approach: string | null
           companies: string[] | null
+          company_years: Json | null
           created_at: string
           difficulty: string
           frequency: number | null
@@ -66,6 +67,7 @@ export type Database = {
           acceptance?: number | null
           approach?: string | null
           companies?: string[] | null
+          company_years?: Json | null
           created_at?: string
           difficulty: string
           frequency?: number | null
@@ -86,6 +88,7 @@ export type Database = {
           acceptance?: number | null
           approach?: string | null
           companies?: string[] | null
+          company_years?: Json | null
           created_at?: string
           difficulty?: string
           frequency?: number | null

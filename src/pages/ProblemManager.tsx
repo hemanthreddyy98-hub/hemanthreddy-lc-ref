@@ -11,7 +11,11 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/com
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
 import { Badge } from '@/components/ui/badge';
 import { toast } from 'sonner';
-import { ArrowLeft, Plus, Trash2, Edit, Save, X, Loader2 } from 'lucide-react';
+import { ArrowLeft, Plus, Trash2, Edit, Save, X, Loader2, Upload, Filter } from 'lucide-react';
+import { CompanyYearsEditor } from '@/components/CompanyYearsEditor';
+import { BulkImport, ImportedProblem } from '@/components/BulkImport';
+import { UNIQUE_COMPANIES } from '@/data/companies';
+import { Json } from '@/integrations/supabase/types';
 
 interface Problem {
   id: number;
@@ -30,6 +34,7 @@ interface Problem {
   platform: string;
   platform_id: string | null;
   rating: number | null;
+  company_years: Record<string, number[]>;
 }
 
 const platforms = ['leetcode', 'hackerrank', 'gfg', 'codechef', 'codeforces'];
@@ -51,6 +56,8 @@ const ProblemManager = () => {
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [editingId, setEditingId] = useState<number | null>(null);
   const [showForm, setShowForm] = useState(false);
+  const [showBulkImport, setShowBulkImport] = useState(false);
+  const [platformFilter, setPlatformFilter] = useState<string>('all');
 
   // Form state
   const [formData, setFormData] = useState({
@@ -68,7 +75,8 @@ const ProblemManager = () => {
     approach: '',
     platform: 'leetcode',
     platform_id: '',
-    rating: ''
+    rating: '',
+    company_years: {} as Record<string, number[]>
   });
 
   useEffect(() => {
@@ -94,7 +102,14 @@ const ProblemManager = () => {
         .order('id', { ascending: false });
 
       if (error) throw error;
-      setProblems(data || []);
+      
+      // Transform the data to match our Problem interface
+      const transformedData = (data || []).map(p => ({
+        ...p,
+        company_years: (p.company_years as Record<string, number[]>) || {}
+      }));
+      
+      setProblems(transformedData);
     } catch (error) {
       console.error('Error fetching problems:', error);
       toast.error('Failed to fetch problems');
@@ -119,7 +134,8 @@ const ProblemManager = () => {
       approach: '',
       platform: 'leetcode',
       platform_id: '',
-      rating: ''
+      rating: '',
+      company_years: {}
     });
     setEditingId(null);
   };
@@ -150,7 +166,8 @@ const ProblemManager = () => {
         approach: formData.approach.trim() || null,
         platform: formData.platform,
         platform_id: formData.platform_id.trim() || null,
-        rating: formData.rating ? parseInt(formData.rating) : null
+        rating: formData.rating ? parseInt(formData.rating) : null,
+        company_years: formData.company_years as unknown as Json
       };
 
       if (editingId) {
@@ -197,10 +214,12 @@ const ProblemManager = () => {
       approach: problem.approach || '',
       platform: problem.platform,
       platform_id: problem.platform_id || '',
-      rating: problem.rating?.toString() || ''
+      rating: problem.rating?.toString() || '',
+      company_years: problem.company_years || {}
     });
     setEditingId(problem.id);
     setShowForm(true);
+    setShowBulkImport(false);
   };
 
   const handleDelete = async (id: number) => {
@@ -221,6 +240,40 @@ const ProblemManager = () => {
     }
   };
 
+  const handleBulkImport = async (importedProblems: ImportedProblem[]) => {
+    try {
+      const problemsToInsert = importedProblems.map(p => ({
+        title: p.title,
+        difficulty: p.difficulty,
+        topic: p.topic,
+        sub_topic: p.sub_topic,
+        companies: p.companies,
+        url: p.url,
+        platform: p.platform,
+        platform_id: p.platform_id || null,
+        acceptance: p.acceptance || 50,
+        frequency: p.frequency || 50,
+        is_premium: p.is_premium || false,
+        time_complexity: p.time_complexity || 'O(n)',
+        space_complexity: p.space_complexity || 'O(1)',
+        approach: p.approach || null,
+        rating: p.rating || null,
+        company_years: (p.company_years || {}) as unknown as Json
+      }));
+
+      const { error } = await supabase
+        .from('problems')
+        .insert(problemsToInsert);
+
+      if (error) throw error;
+      
+      fetchProblems();
+    } catch (error) {
+      console.error('Error bulk importing:', error);
+      throw error;
+    }
+  };
+
   const getDifficultyColor = (difficulty: string) => {
     switch (difficulty) {
       case 'Easy': return 'bg-green-500/20 text-green-400 border-green-500/30';
@@ -229,6 +282,10 @@ const ProblemManager = () => {
       default: return 'bg-muted text-muted-foreground';
     }
   };
+
+  const filteredProblems = platformFilter === 'all' 
+    ? problems 
+    : problems.filter(p => p.platform === platformFilter);
 
   if (loading || isLoading) {
     return (
@@ -267,8 +324,34 @@ const ProblemManager = () => {
           </div>
         </div>
 
+        {/* Action Buttons */}
+        <div className="flex gap-3 mb-6">
+          {!showForm && !showBulkImport && (
+            <>
+              <Button onClick={() => { setShowForm(true); setShowBulkImport(false); }}>
+                <Plus className="w-4 h-4 mr-2" />
+                Add New Problem
+              </Button>
+              <Button variant="outline" onClick={() => { setShowBulkImport(true); setShowForm(false); }}>
+                <Upload className="w-4 h-4 mr-2" />
+                Bulk Import
+              </Button>
+            </>
+          )}
+        </div>
+
+        {/* Bulk Import */}
+        {showBulkImport && (
+          <div className="mb-8">
+            <BulkImport 
+              onImport={handleBulkImport}
+              onClose={() => setShowBulkImport(false)}
+            />
+          </div>
+        )}
+
         {/* Add/Edit Form */}
-        {showForm ? (
+        {showForm && (
           <Card className="mb-8">
             <CardHeader>
               <CardTitle>{editingId ? 'Edit Problem' : 'Add New Problem'}</CardTitle>
@@ -443,6 +526,13 @@ const ProblemManager = () => {
                   )}
                 </div>
 
+                {/* Company Years Editor */}
+                <CompanyYearsEditor
+                  companyYears={formData.company_years}
+                  companies={formData.companies.split(',').map(c => c.trim()).filter(Boolean)}
+                  onChange={(company_years) => setFormData({ ...formData, company_years })}
+                />
+
                 <div className="space-y-2">
                   <Label htmlFor="approach">Approach/Solution Hint</Label>
                   <Textarea
@@ -489,23 +579,38 @@ const ProblemManager = () => {
               </form>
             </CardContent>
           </Card>
-        ) : (
-          <Button onClick={() => setShowForm(true)} className="mb-6">
-            <Plus className="w-4 h-4 mr-2" />
-            Add New Problem
-          </Button>
         )}
 
         {/* Problems Table */}
         <Card>
           <CardHeader>
-            <CardTitle>All Problems ({problems.length})</CardTitle>
-            <CardDescription>Manage your coding problems database</CardDescription>
+            <div className="flex items-center justify-between">
+              <div>
+                <CardTitle>All Problems ({filteredProblems.length})</CardTitle>
+                <CardDescription>Manage your coding problems database</CardDescription>
+              </div>
+              <div className="flex items-center gap-2">
+                <Filter className="w-4 h-4 text-muted-foreground" />
+                <Select value={platformFilter} onValueChange={setPlatformFilter}>
+                  <SelectTrigger className="w-[150px]">
+                    <SelectValue placeholder="Filter by platform" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="all">All Platforms</SelectItem>
+                    {platforms.map((p) => (
+                      <SelectItem key={p} value={p}>
+                        {p.charAt(0).toUpperCase() + p.slice(1)}
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+              </div>
+            </div>
           </CardHeader>
           <CardContent>
-            {problems.length === 0 ? (
+            {filteredProblems.length === 0 ? (
               <div className="text-center py-8 text-muted-foreground">
-                No problems added yet. Click "Add New Problem" to get started.
+                No problems found. Click "Add New Problem" or "Bulk Import" to get started.
               </div>
             ) : (
               <div className="overflow-x-auto">
@@ -518,11 +623,12 @@ const ProblemManager = () => {
                       <TableHead>Difficulty</TableHead>
                       <TableHead>Topic</TableHead>
                       <TableHead>Companies</TableHead>
+                      <TableHead>Years</TableHead>
                       <TableHead className="text-right">Actions</TableHead>
                     </TableRow>
                   </TableHeader>
                   <TableBody>
-                    {problems.map((problem) => (
+                    {filteredProblems.map((problem) => (
                       <TableRow key={problem.id}>
                         <TableCell className="font-mono">{problem.id}</TableCell>
                         <TableCell>
@@ -558,6 +664,20 @@ const ProblemManager = () => {
                               <Badge variant="secondary" className="text-xs">
                                 +{problem.companies.length - 3}
                               </Badge>
+                            )}
+                          </div>
+                        </TableCell>
+                        <TableCell>
+                          <div className="text-xs text-muted-foreground max-w-[150px]">
+                            {Object.entries(problem.company_years || {}).slice(0, 2).map(([company, years]) => (
+                              <div key={company} className="truncate">
+                                {company}: {(years as number[]).join(', ')}
+                              </div>
+                            ))}
+                            {Object.keys(problem.company_years || {}).length > 2 && (
+                              <div className="text-muted-foreground/60">
+                                +{Object.keys(problem.company_years).length - 2} more
+                              </div>
                             )}
                           </div>
                         </TableCell>

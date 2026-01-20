@@ -1,6 +1,6 @@
-import { Code2, Terminal, BookOpen, Award, Trophy } from 'lucide-react';
+import { Code2, Terminal, BookOpen, Award, Trophy, Layers } from 'lucide-react';
 
-export type Platform = 'leetcode' | 'hackerrank' | 'gfg' | 'codechef' | 'codeforces';
+export type Platform = 'all' | 'leetcode' | 'hackerrank' | 'gfg' | 'codechef' | 'codeforces';
 
 interface PlatformSwitcherProps {
   platform: Platform;
@@ -9,6 +9,7 @@ interface PlatformSwitcherProps {
 }
 
 const platforms: { id: Platform; name: string; icon: React.ReactNode; color: string }[] = [
+  { id: 'all', name: 'All', icon: <Layers className="h-4 w-4" />, color: '#8B5CF6' },
   { id: 'leetcode', name: 'LeetCode', icon: <Code2 className="h-4 w-4" />, color: '#FFA116' },
   { id: 'hackerrank', name: 'HackerRank', icon: <Terminal className="h-4 w-4" />, color: '#00EA64' },
   { id: 'gfg', name: 'GFG', icon: <BookOpen className="h-4 w-4" />, color: '#2F8D46' },

@@ -1,12 +1,19 @@
 import { useState, useEffect } from 'react';
 import { supabase } from '@/integrations/supabase/client';
 
+interface VideoEntry {
+  problem_id: number;
+  youtube_url: string;
+  title: string | null;
+}
+
 interface VideoMap {
-  [problemId: number]: string;
+  byId: { [problemId: number]: string };
+  byTitle: { [title: string]: string };
 }
 
 export const useProblemVideos = () => {
-  const [videoMap, setVideoMap] = useState<VideoMap>({});
+  const [videoMap, setVideoMap] = useState<VideoMap>({ byId: {}, byTitle: {} });
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
@@ -14,15 +21,22 @@ export const useProblemVideos = () => {
       try {
         const { data, error } = await supabase
           .from('problem_videos')
-          .select('problem_id, youtube_url');
+          .select('problem_id, youtube_url, title');
 
         if (error) throw error;
 
-        const map: VideoMap = {};
-        data?.forEach((item) => {
-          map[item.problem_id] = item.youtube_url;
+        const byId: { [problemId: number]: string } = {};
+        const byTitle: { [title: string]: string } = {};
+        
+        data?.forEach((item: VideoEntry) => {
+          byId[item.problem_id] = item.youtube_url;
+          // Also map by title (normalized) for static problem matching
+          if (item.title) {
+            byTitle[item.title.toLowerCase().trim()] = item.youtube_url;
+          }
         });
-        setVideoMap(map);
+        
+        setVideoMap({ byId, byTitle });
       } catch (error) {
         console.error('Error fetching video links:', error);
       } finally {
@@ -53,8 +67,17 @@ export const useProblemVideos = () => {
     };
   }, []);
 
-  const getVideoUrl = (problemId: number): string | undefined => {
-    return videoMap[problemId];
+  // Get video URL by problem ID or by title (for static problems)
+  const getVideoUrl = (problemId: number, title?: string): string | undefined => {
+    // First try by ID
+    if (videoMap.byId[problemId]) {
+      return videoMap.byId[problemId];
+    }
+    // Then try by title
+    if (title) {
+      return videoMap.byTitle[title.toLowerCase().trim()];
+    }
+    return undefined;
   };
 
   return { videoMap, loading, getVideoUrl };

@@ -14,7 +14,7 @@ export interface UnifiedProblem {
   timeComplexity: string;
   spaceComplexity: string;
   approach: string;
-  platform: 'leetcode' | 'hackerrank' | 'gfg' | 'codechef' | 'codeforces';
+  platform: 'all' | 'leetcode' | 'hackerrank' | 'gfg' | 'codechef' | 'codeforces';
   // Platform-specific IDs
   leetcodeId?: number;
   hackerrankId?: string;

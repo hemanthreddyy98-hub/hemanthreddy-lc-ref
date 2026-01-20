@@ -10,6 +10,7 @@ import { YearFilter } from '@/components/YearFilter';
 import { ContactBanner } from '@/components/ContactBanner';
 import { PlatformSwitcher, Platform } from '@/components/PlatformSwitcher';
 import { SubtopicTabs } from '@/components/SubtopicTabs';
+import { SortingControls, SortField, SortDirection } from '@/components/SortingControls';
 import { useProblemVideos } from '@/hooks/useProblemVideos';
 import { useProblems } from '@/hooks/useProblems';
 import { topics as leetcodeTopics } from '@/data/leetcodeProblems';
@@ -17,6 +18,7 @@ import { hackerrankTopics } from '@/data/hackerrankProblems';
 import { gfgTopics } from '@/data/gfgProblems';
 import { codechefTopics } from '@/data/codechefProblems';
 import { codeforcesTopics } from '@/data/codeforcesProblems';
+import { UnifiedProblem } from '@/types/problem';
 
 const PROBLEMS_PER_PAGE = 24;
 
@@ -28,8 +30,26 @@ const platformTopics = {
   codeforces: codeforcesTopics,
 };
 
+// Combine all topics for "all" platform view
+const allTopics = [...new Set([
+  ...leetcodeTopics.map(t => t.name),
+  ...hackerrankTopics.map(t => t.name),
+  ...gfgTopics.map(t => t.name),
+  ...codechefTopics.map(t => t.name),
+  ...codeforcesTopics.map(t => t.name),
+])].map(name => {
+  const topic = leetcodeTopics.find(t => t.name === name) ||
+    hackerrankTopics.find(t => t.name === name) ||
+    gfgTopics.find(t => t.name === name) ||
+    codechefTopics.find(t => t.name === name) ||
+    codeforcesTopics.find(t => t.name === name);
+  return topic!;
+});
+
+const difficultyOrder = { Easy: 1, Medium: 2, Hard: 3 };
+
 const Index = () => {
-  const [platform, setPlatform] = useState<Platform>('leetcode');
+  const [platform, setPlatform] = useState<Platform>('all');
   const [searchQuery, setSearchQuery] = useState('');
   const [selectedTopic, setSelectedTopic] = useState('All');
   const [selectedSubtopic, setSelectedSubtopic] = useState('All');
@@ -40,12 +60,14 @@ const Index = () => {
   const [solved, setSolved] = useState<Set<number>>(new Set());
   const [isSidebarOpen, setIsSidebarOpen] = useState(false);
   const [visibleCount, setVisibleCount] = useState(PROBLEMS_PER_PAGE);
+  const [sortField, setSortField] = useState<SortField>('none');
+  const [sortDirection, setSortDirection] = useState<SortDirection>('asc');
   const { getVideoUrl } = useProblemVideos();
   
   // Fetch problems from database with static fallback
   const { problems: allProblems, platformCounts } = useProblems(platform);
   
-  const topics = platformTopics[platform];
+  const topics = platform === 'all' ? allTopics : platformTopics[platform];
 
   const currentTopicSubtopics = useMemo(() => {
     if (selectedTopic === 'All') return [];
@@ -71,8 +93,15 @@ const Index = () => {
     return Array.from(yearsSet).sort((a, b) => b - a);
   }, [allProblems, selectedCompanies]);
 
-  const filteredProblems = useMemo(() => {
-    return allProblems.filter((problem) => {
+  const handleSortChange = (field: SortField, direction: SortDirection) => {
+    setSortField(field);
+    setSortDirection(direction);
+    setVisibleCount(PROBLEMS_PER_PAGE);
+  };
+
+  const filteredAndSortedProblems = useMemo(() => {
+    // First filter
+    let filtered = allProblems.filter((problem) => {
       if (searchQuery) {
         const query = searchQuery.toLowerCase();
         const matchesSearch =
@@ -99,9 +128,32 @@ const Index = () => {
       
       return true;
     });
-  }, [allProblems, searchQuery, selectedTopic, selectedSubtopic, difficulty, selectedCompanies, selectedYears]);
 
-  const visibleProblems = useMemo(() => filteredProblems.slice(0, visibleCount), [filteredProblems, visibleCount]);
+    // Then sort
+    if (sortField !== 'none') {
+      filtered = [...filtered].sort((a, b) => {
+        let comparison = 0;
+        
+        switch (sortField) {
+          case 'difficulty':
+            comparison = difficultyOrder[a.difficulty] - difficultyOrder[b.difficulty];
+            break;
+          case 'frequency':
+            comparison = (a.frequency || 0) - (b.frequency || 0);
+            break;
+          case 'acceptance':
+            comparison = (a.acceptance || 0) - (b.acceptance || 0);
+            break;
+        }
+        
+        return sortDirection === 'asc' ? comparison : -comparison;
+      });
+    }
+
+    return filtered;
+  }, [allProblems, searchQuery, selectedTopic, selectedSubtopic, difficulty, selectedCompanies, selectedYears, sortField, sortDirection]);
+
+  const visibleProblems = useMemo(() => filteredAndSortedProblems.slice(0, visibleCount), [filteredAndSortedProblems, visibleCount]);
 
   const handleToggleBookmark = useCallback((id: number) => {
     setBookmarked((prev) => {
@@ -135,6 +187,9 @@ const Index = () => {
     setVisibleCount(PROBLEMS_PER_PAGE);
   };
 
+  // Generate unique key for problems (platform + id combination)
+  const getProblemKey = (problem: UnifiedProblem) => `${problem.platform}-${problem.id}`;
+
   return (
     <div className="min-h-screen flex flex-col bg-background">
       <Header
@@ -143,7 +198,7 @@ const Index = () => {
         difficulty={difficulty}
         onDifficultyChange={(d) => { setDifficulty(d); setVisibleCount(PROBLEMS_PER_PAGE); }}
         totalProblems={allProblems.length}
-        filteredCount={filteredProblems.length}
+        filteredCount={filteredAndSortedProblems.length}
         onMenuToggle={() => setIsSidebarOpen(!isSidebarOpen)}
         isSidebarOpen={isSidebarOpen}
       />
@@ -179,14 +234,22 @@ const Index = () => {
               </div>
             )}
 
-            <div className="flex items-center gap-3 mb-4">
-              <div className="flex items-center gap-2">
-                <Code2 className="h-5 w-5 text-primary" />
-                <h2 className="text-xl font-semibold text-foreground">
-                  {selectedTopic === 'All' ? 'All Problems' : selectedTopic}
-                </h2>
+            <div className="flex items-center justify-between gap-3 mb-4">
+              <div className="flex items-center gap-3">
+                <div className="flex items-center gap-2">
+                  <Code2 className="h-5 w-5 text-primary" />
+                  <h2 className="text-xl font-semibold text-foreground">
+                    {selectedTopic === 'All' ? 'All Problems' : selectedTopic}
+                  </h2>
+                </div>
+                <span className="text-sm text-muted-foreground">({filteredAndSortedProblems.length} problems)</span>
               </div>
-              <span className="text-sm text-muted-foreground">({filteredProblems.length} problems)</span>
+              
+              <SortingControls
+                sortField={sortField}
+                sortDirection={sortDirection}
+                onSortChange={handleSortChange}
+              />
             </div>
 
             {selectedTopic !== 'All' && currentTopicSubtopics.length > 0 && (
@@ -197,13 +260,13 @@ const Index = () => {
               <>
                 <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-4">
                   {visibleProblems.map((problem, index) => (
-                    <ProblemCard key={`${platform}-${problem.id}`} problem={problem} index={index} isBookmarked={bookmarked.has(problem.id)} isSolved={solved.has(problem.id)} videoUrl={getVideoUrl(problem.id)} onToggleBookmark={handleToggleBookmark} onToggleSolved={handleToggleSolved} selectedCompanies={selectedCompanies} />
+                    <ProblemCard key={getProblemKey(problem)} problem={problem} index={index} isBookmarked={bookmarked.has(problem.id)} isSolved={solved.has(problem.id)} videoUrl={getVideoUrl(problem.id, problem.title)} onToggleBookmark={handleToggleBookmark} onToggleSolved={handleToggleSolved} selectedCompanies={selectedCompanies} />
                   ))}
                 </div>
-                {visibleCount < filteredProblems.length && (
+                {visibleCount < filteredAndSortedProblems.length && (
                   <div className="mt-8 text-center">
                     <button onClick={() => setVisibleCount((prev) => prev + PROBLEMS_PER_PAGE)} className="px-8 py-3 rounded-xl bg-primary/10 border border-primary/30 text-primary font-medium hover:bg-primary/20 transition-all">
-                      Load More ({filteredProblems.length - visibleCount} remaining)
+                      Load More ({filteredAndSortedProblems.length - visibleCount} remaining)
                     </button>
                   </div>
                 )}

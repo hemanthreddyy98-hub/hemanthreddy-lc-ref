@@ -1,6 +1,9 @@
 import { ChevronRight } from 'lucide-react';
 import { topics as leetcodeTopics, getTopicCounts as getLeetcodeTopicCounts } from '@/data/leetcodeProblems';
 import { hackerrankTopics, getHackerRankTopicCounts } from '@/data/hackerrankProblems';
+import { gfgTopics } from '@/data/gfgProblems';
+import { codechefTopics } from '@/data/codechefProblems';
+import { codeforcesTopics } from '@/data/codeforcesProblems';
 import { Platform } from '@/components/PlatformSwitcher';
 import { cn } from '@/lib/utils';
 
@@ -11,9 +14,63 @@ interface SidebarProps {
   platform: Platform;
 }
 
+// Get topics based on platform
+const getTopicsForPlatform = (platform: Platform) => {
+  switch (platform) {
+    case 'leetcode':
+      return leetcodeTopics;
+    case 'hackerrank':
+      return hackerrankTopics;
+    case 'gfg':
+      return gfgTopics;
+    case 'codechef':
+      return codechefTopics;
+    case 'codeforces':
+      return codeforcesTopics;
+    case 'all':
+    default:
+      // Combine all unique topics
+      const allTopicsMap = new Map<string, { name: string; icon: string; count: number; subTopics: string[] }>();
+      
+      [leetcodeTopics, hackerrankTopics, gfgTopics, codechefTopics, codeforcesTopics].forEach(topicList => {
+        topicList.forEach(topic => {
+          if (allTopicsMap.has(topic.name)) {
+            const existing = allTopicsMap.get(topic.name)!;
+            existing.count += topic.count;
+            // Merge subtopics
+            topic.subTopics.forEach(sub => {
+              if (!existing.subTopics.includes(sub)) {
+                existing.subTopics.push(sub);
+              }
+            });
+          } else {
+            allTopicsMap.set(topic.name, { ...topic, subTopics: [...topic.subTopics] });
+          }
+        });
+      });
+      
+      return Array.from(allTopicsMap.values());
+  }
+};
+
+const getTopicCountsForPlatform = (platform: Platform) => {
+  switch (platform) {
+    case 'leetcode':
+      return getLeetcodeTopicCounts();
+    case 'hackerrank':
+      return getHackerRankTopicCounts();
+    default:
+      // For other platforms, use the count from topics
+      const topics = getTopicsForPlatform(platform);
+      const counts: Record<string, number> = {};
+      topics.forEach(t => { counts[t.name] = t.count; });
+      return counts;
+  }
+};
+
 export const Sidebar = ({ selectedTopic, onTopicSelect, isOpen, platform }: SidebarProps) => {
-  const topics = platform === 'leetcode' ? leetcodeTopics : hackerrankTopics;
-  const topicCounts = platform === 'leetcode' ? getLeetcodeTopicCounts() : getHackerRankTopicCounts();
+  const topics = getTopicsForPlatform(platform);
+  const topicCounts = getTopicCountsForPlatform(platform);
 
   return (
     <aside

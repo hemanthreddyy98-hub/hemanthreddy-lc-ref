@@ -7,10 +7,10 @@ import { gfgProblems } from '@/data/gfgProblems';
 import { codechefProblems } from '@/data/codechefProblems';
 import { codeforcesProblems } from '@/data/codeforcesProblems';
 
-type Platform = 'leetcode' | 'hackerrank' | 'gfg' | 'codechef' | 'codeforces';
+type Platform = 'all' | 'leetcode' | 'hackerrank' | 'gfg' | 'codechef' | 'codeforces';
 
 // Static fallback data
-const staticPlatformData: Record<Platform, UnifiedProblem[]> = {
+const staticPlatformData: Record<Exclude<Platform, 'all'>, UnifiedProblem[]> = {
   leetcode: leetcodeProblems.map(p => ({ ...p } as UnifiedProblem)),
   hackerrank: hackerrankProblems.map(p => ({ ...p } as UnifiedProblem)),
   gfg: gfgProblems.map(p => ({ ...p } as UnifiedProblem)),
@@ -120,6 +120,25 @@ export const useProblems = (platform: Platform) => {
 
   // Combine database problems with static fallback
   const problems = useMemo(() => {
+    if (platform === 'all') {
+      // Return all problems from all platforms
+      const allStaticProblems = [
+        ...staticPlatformData.leetcode,
+        ...staticPlatformData.hackerrank,
+        ...staticPlatformData.gfg,
+        ...staticPlatformData.codechef,
+        ...staticPlatformData.codeforces,
+      ];
+      
+      if (dbProblems.length > 0) {
+        const dbIds = new Set(dbProblems.map(p => `${p.platform}-${p.id}`));
+        const uniqueStaticProblems = allStaticProblems.filter(p => !dbIds.has(`${p.platform}-${p.id}`));
+        return [...dbProblems, ...uniqueStaticProblems];
+      }
+      
+      return allStaticProblems;
+    }
+    
     const platformDbProblems = dbProblems.filter(p => p.platform === platform);
     const staticProblems = staticPlatformData[platform];
     
@@ -144,13 +163,17 @@ export const useProblems = (platform: Platform) => {
       codeforces: dbProblems.filter(p => p.platform === 'codeforces').length,
     };
 
-    // Use DB counts if available, otherwise static counts
-    return {
+    const counts = {
       leetcode: dbCounts.leetcode > 0 ? dbCounts.leetcode : staticPlatformData.leetcode.length,
       hackerrank: dbCounts.hackerrank > 0 ? dbCounts.hackerrank : staticPlatformData.hackerrank.length,
       gfg: dbCounts.gfg > 0 ? dbCounts.gfg : staticPlatformData.gfg.length,
       codechef: dbCounts.codechef > 0 ? dbCounts.codechef : staticPlatformData.codechef.length,
       codeforces: dbCounts.codeforces > 0 ? dbCounts.codeforces : staticPlatformData.codeforces.length,
+    };
+
+    return {
+      ...counts,
+      all: counts.leetcode + counts.hackerrank + counts.gfg + counts.codechef + counts.codeforces,
     };
   }, [dbProblems]);
 

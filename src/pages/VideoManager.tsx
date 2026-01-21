@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react';
-import { ArrowLeft, Youtube, Plus, Trash2, Edit2, Save, X, Search, Shield, LogOut } from 'lucide-react';
+import { ArrowLeft, Youtube, Plus, Trash2, Edit2, Save, X, Search, Shield, LogOut, Upload } from 'lucide-react';
 import { Link, useNavigate } from 'react-router-dom';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -7,6 +7,7 @@ import { supabase } from '@/integrations/supabase/client';
 import { toast } from 'sonner';
 import { problems } from '@/data/leetcodeProblems';
 import { useAuth } from '@/hooks/useAuth';
+import { BulkVideoImport } from '@/components/BulkVideoImport';
 
 // Strict YouTube URL validation regex
 const YOUTUBE_URL_REGEX = /^(https?:\/\/)?(www\.)?(youtube\.com\/(watch\?v=|embed\/|v\/)|youtu\.be\/)[a-zA-Z0-9_-]{11}(&[a-zA-Z0-9_=-]*)*$/;
@@ -34,6 +35,7 @@ const VideoManager = () => {
   const [newYoutubeUrl, setNewYoutubeUrl] = useState('');
   const [editingId, setEditingId] = useState<string | null>(null);
   const [editUrl, setEditUrl] = useState('');
+  const [showBulkImport, setShowBulkImport] = useState(false);
 
   useEffect(() => {
     // Wait for both auth loading AND admin check to complete
@@ -243,12 +245,32 @@ const VideoManager = () => {
       </header>
 
       <main className="max-w-6xl mx-auto px-4 py-8">
+        {/* Bulk Import */}
+        {showBulkImport && (
+          <div className="mb-8">
+            <BulkVideoImport 
+              onClose={() => setShowBulkImport(false)} 
+              onSuccess={fetchVideoLinks}
+            />
+          </div>
+        )}
+
         {/* Add New Video */}
         <div className="bg-card border border-border rounded-xl p-6 mb-8">
-          <h2 className="text-lg font-semibold mb-4 flex items-center gap-2">
-            <Plus className="h-5 w-5 text-primary" />
-            Add Explanation Video
-          </h2>
+          <div className="flex items-center justify-between mb-4">
+            <h2 className="text-lg font-semibold flex items-center gap-2">
+              <Plus className="h-5 w-5 text-primary" />
+              Add Explanation Video
+            </h2>
+            <Button
+              variant="outline"
+              onClick={() => setShowBulkImport(!showBulkImport)}
+              className="gap-2"
+            >
+              <Upload className="h-4 w-4" />
+              Bulk Import
+            </Button>
+          </div>
           <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
             <div>
               <label className="text-sm text-muted-foreground mb-2 block">Problem ID</label>

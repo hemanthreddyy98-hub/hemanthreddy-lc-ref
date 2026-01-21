@@ -1,5 +1,5 @@
 import { useState, useMemo, useCallback } from 'react';
-import { Code2 } from 'lucide-react';
+import { Code2, BarChart3 } from 'lucide-react';
 import { Header } from '@/components/Header';
 import { Sidebar } from '@/components/Sidebar';
 import { ProblemCard } from '@/components/ProblemCard';
@@ -12,6 +12,7 @@ import { PlatformSwitcher, Platform } from '@/components/PlatformSwitcher';
 import { SubtopicTabs } from '@/components/SubtopicTabs';
 import { SortingControls, SortField, SortDirection } from '@/components/SortingControls';
 import { ProblemPagination } from '@/components/ProblemPagination';
+import { StatsDashboard } from '@/components/StatsDashboard';
 import { useProblemVideos } from '@/hooks/useProblemVideos';
 import { useProblems } from '@/hooks/useProblems';
 import { topics as leetcodeTopics } from '@/data/leetcodeProblems';
@@ -20,7 +21,7 @@ import { gfgTopics } from '@/data/gfgProblems';
 import { codechefTopics } from '@/data/codechefProblems';
 import { codeforcesTopics } from '@/data/codeforcesProblems';
 import { UnifiedProblem } from '@/types/problem';
-
+import { Button } from '@/components/ui/button';
 const PROBLEMS_PER_PAGE = 24;
 
 const platformTopics = {
@@ -60,6 +61,7 @@ const Index = () => {
   const [bookmarked, setBookmarked] = useState<Set<number>>(new Set());
   const [solved, setSolved] = useState<Set<number>>(new Set());
   const [isSidebarOpen, setIsSidebarOpen] = useState(false);
+  const [showStats, setShowStats] = useState(false);
   const [currentPage, setCurrentPage] = useState(1);
   const [sortField, setSortField] = useState<SortField>('none');
   const [sortDirection, setSortDirection] = useState<SortDirection>('asc');
@@ -227,9 +229,22 @@ const Index = () => {
             <HeroSection onDifficultyFilter={(d) => { setDifficulty(d); setCurrentPage(1); }} />
             <ContactBanner />
 
-            <div className="mb-6 flex justify-center">
+            <div className="mb-6 flex flex-col sm:flex-row items-center justify-center gap-4">
               <PlatformSwitcher platform={platform} onPlatformChange={handlePlatformChange} counts={platformCounts} />
+              <Button
+                variant={showStats ? "default" : "outline"}
+                size="sm"
+                onClick={() => setShowStats(!showStats)}
+                className="flex items-center gap-2"
+              >
+                <BarChart3 className="h-4 w-4" />
+                {showStats ? 'Hide Stats' : 'Show Stats'}
+              </Button>
             </div>
+
+            {showStats && (
+              <StatsDashboard problems={allProblems} getVideoUrl={getVideoUrl} />
+            )}
 
             <div className="mb-6">
               <CompanyFilter selectedCompanies={selectedCompanies} onCompaniesChange={(c) => { setSelectedCompanies(c); setSelectedYears([]); setCurrentPage(1); }} />

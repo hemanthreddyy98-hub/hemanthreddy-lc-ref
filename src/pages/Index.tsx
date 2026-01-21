@@ -11,6 +11,7 @@ import { ContactBanner } from '@/components/ContactBanner';
 import { PlatformSwitcher, Platform } from '@/components/PlatformSwitcher';
 import { SubtopicTabs } from '@/components/SubtopicTabs';
 import { SortingControls, SortField, SortDirection } from '@/components/SortingControls';
+import { ProblemPagination } from '@/components/ProblemPagination';
 import { useProblemVideos } from '@/hooks/useProblemVideos';
 import { useProblems } from '@/hooks/useProblems';
 import { topics as leetcodeTopics } from '@/data/leetcodeProblems';
@@ -59,7 +60,7 @@ const Index = () => {
   const [bookmarked, setBookmarked] = useState<Set<number>>(new Set());
   const [solved, setSolved] = useState<Set<number>>(new Set());
   const [isSidebarOpen, setIsSidebarOpen] = useState(false);
-  const [visibleCount, setVisibleCount] = useState(PROBLEMS_PER_PAGE);
+  const [currentPage, setCurrentPage] = useState(1);
   const [sortField, setSortField] = useState<SortField>('none');
   const [sortDirection, setSortDirection] = useState<SortDirection>('asc');
   const { getVideoUrl } = useProblemVideos();
@@ -96,7 +97,7 @@ const Index = () => {
   const handleSortChange = (field: SortField, direction: SortDirection) => {
     setSortField(field);
     setSortDirection(direction);
-    setVisibleCount(PROBLEMS_PER_PAGE);
+    setCurrentPage(1);
   };
 
   const filteredAndSortedProblems = useMemo(() => {
@@ -153,7 +154,18 @@ const Index = () => {
     return filtered;
   }, [allProblems, searchQuery, selectedTopic, selectedSubtopic, difficulty, selectedCompanies, selectedYears, sortField, sortDirection]);
 
-  const visibleProblems = useMemo(() => filteredAndSortedProblems.slice(0, visibleCount), [filteredAndSortedProblems, visibleCount]);
+  // Pagination calculations
+  const totalPages = Math.ceil(filteredAndSortedProblems.length / PROBLEMS_PER_PAGE);
+  const startIndex = (currentPage - 1) * PROBLEMS_PER_PAGE;
+  const visibleProblems = useMemo(() => 
+    filteredAndSortedProblems.slice(startIndex, startIndex + PROBLEMS_PER_PAGE), 
+    [filteredAndSortedProblems, startIndex]
+  );
+
+  const handlePageChange = useCallback((page: number) => {
+    setCurrentPage(page);
+    window.scrollTo({ top: 0, behavior: 'smooth' });
+  }, []);
 
   const handleToggleBookmark = useCallback((id: number) => {
     setBookmarked((prev) => {
@@ -176,7 +188,7 @@ const Index = () => {
   const handleTopicSelect = (topic: string) => {
     setSelectedTopic(topic);
     setSelectedSubtopic('All');
-    setVisibleCount(PROBLEMS_PER_PAGE);
+    setCurrentPage(1);
     setIsSidebarOpen(false);
   };
 
@@ -184,7 +196,7 @@ const Index = () => {
     setPlatform(p);
     setSelectedTopic('All');
     setSelectedSubtopic('All');
-    setVisibleCount(PROBLEMS_PER_PAGE);
+    setCurrentPage(1);
   };
 
   // Generate unique key for problems (platform + id combination)
@@ -196,7 +208,7 @@ const Index = () => {
         searchQuery={searchQuery}
         onSearchChange={setSearchQuery}
         difficulty={difficulty}
-        onDifficultyChange={(d) => { setDifficulty(d); setVisibleCount(PROBLEMS_PER_PAGE); }}
+        onDifficultyChange={(d) => { setDifficulty(d); setCurrentPage(1); }}
         totalProblems={allProblems.length}
         filteredCount={filteredAndSortedProblems.length}
         onMenuToggle={() => setIsSidebarOpen(!isSidebarOpen)}
@@ -212,7 +224,7 @@ const Index = () => {
 
         <main className="flex-1 lg:ml-0 min-w-0">
           <div className="max-w-7xl mx-auto px-4 lg:px-6 py-6">
-            <HeroSection onDifficultyFilter={(d) => { setDifficulty(d); setVisibleCount(PROBLEMS_PER_PAGE); }} />
+            <HeroSection onDifficultyFilter={(d) => { setDifficulty(d); setCurrentPage(1); }} />
             <ContactBanner />
 
             <div className="mb-6 flex justify-center">
@@ -220,7 +232,7 @@ const Index = () => {
             </div>
 
             <div className="mb-6">
-              <CompanyFilter selectedCompanies={selectedCompanies} onCompaniesChange={(c) => { setSelectedCompanies(c); setSelectedYears([]); setVisibleCount(PROBLEMS_PER_PAGE); }} />
+              <CompanyFilter selectedCompanies={selectedCompanies} onCompaniesChange={(c) => { setSelectedCompanies(c); setSelectedYears([]); setCurrentPage(1); }} />
             </div>
 
             {/* Year filter - only visible when companies are selected */}
@@ -228,7 +240,7 @@ const Index = () => {
               <div className="mb-6">
                 <YearFilter 
                   selectedYears={selectedYears} 
-                  onYearsChange={(y) => { setSelectedYears(y); setVisibleCount(PROBLEMS_PER_PAGE); }} 
+                  onYearsChange={(y) => { setSelectedYears(y); setCurrentPage(1); }} 
                   availableYears={availableYears} 
                 />
               </div>
@@ -253,7 +265,7 @@ const Index = () => {
             </div>
 
             {selectedTopic !== 'All' && currentTopicSubtopics.length > 0 && (
-              <SubtopicTabs subTopics={currentTopicSubtopics} selectedSubtopic={selectedSubtopic} onSubtopicSelect={(s) => { setSelectedSubtopic(s); setVisibleCount(PROBLEMS_PER_PAGE); }} />
+              <SubtopicTabs subTopics={currentTopicSubtopics} selectedSubtopic={selectedSubtopic} onSubtopicSelect={(s) => { setSelectedSubtopic(s); setCurrentPage(1); }} />
             )}
 
             {visibleProblems.length > 0 ? (
@@ -263,13 +275,11 @@ const Index = () => {
                     <ProblemCard key={getProblemKey(problem)} problem={problem} index={index} isBookmarked={bookmarked.has(problem.id)} isSolved={solved.has(problem.id)} videoUrl={getVideoUrl(problem.id, problem.title)} onToggleBookmark={handleToggleBookmark} onToggleSolved={handleToggleSolved} selectedCompanies={selectedCompanies} />
                   ))}
                 </div>
-                {visibleCount < filteredAndSortedProblems.length && (
-                  <div className="mt-8 text-center">
-                    <button onClick={() => setVisibleCount((prev) => prev + PROBLEMS_PER_PAGE)} className="px-8 py-3 rounded-xl bg-primary/10 border border-primary/30 text-primary font-medium hover:bg-primary/20 transition-all">
-                      Load More ({filteredAndSortedProblems.length - visibleCount} remaining)
-                    </button>
-                  </div>
-                )}
+                <ProblemPagination
+                  currentPage={currentPage}
+                  totalPages={totalPages}
+                  onPageChange={handlePageChange}
+                />
               </>
             ) : (
               <div className="text-center py-16">

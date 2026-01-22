@@ -4,6 +4,7 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Progress } from '@/components/ui/progress';
 import { Badge } from '@/components/ui/badge';
 import { UnifiedProblem } from '@/types/problem';
+import { TopicSubtopicStats } from '@/components/stats/TopicSubtopicStats';
 
 interface StatsDashboardProps {
   problems: UnifiedProblem[];
@@ -18,11 +19,19 @@ interface PlatformStats {
   color: string;
 }
 
+interface SubtopicStats {
+  subtopic: string;
+  total: number;
+  withVideo: number;
+  percentage: number;
+}
+
 interface TopicStats {
   topic: string;
   total: number;
   withVideo: number;
   percentage: number;
+  subtopics: SubtopicStats[];
 }
 
 interface DifficultyStats {
@@ -48,8 +57,12 @@ export const StatsDashboard = ({ problems, getVideoUrl }: StatsDashboardProps) =
     
     // Platform stats
     const platformMap: Record<string, { total: number; withVideo: number }> = {};
-    // Topic stats
-    const topicMap: Record<string, { total: number; withVideo: number }> = {};
+    // Topic stats with subtopics
+    const topicMap: Record<string, { 
+      total: number; 
+      withVideo: number; 
+      subtopics: Record<string, { total: number; withVideo: number }>;
+    }> = {};
     // Difficulty stats
     const difficultyMap: Record<string, { total: number; withVideo: number }> = {
       Easy: { total: 0, withVideo: 0 },
@@ -71,13 +84,22 @@ export const StatsDashboard = ({ problems, getVideoUrl }: StatsDashboardProps) =
       platformMap[platform].total++;
       if (hasVideo) platformMap[platform].withVideo++;
       
-      // Topic stats
+      // Topic stats with subtopics
       const topic = problem.topic || 'Unknown';
+      const subtopic = problem.subTopic || 'General';
+      
       if (!topicMap[topic]) {
-        topicMap[topic] = { total: 0, withVideo: 0 };
+        topicMap[topic] = { total: 0, withVideo: 0, subtopics: {} };
       }
       topicMap[topic].total++;
       if (hasVideo) topicMap[topic].withVideo++;
+      
+      // Subtopic stats
+      if (!topicMap[topic].subtopics[subtopic]) {
+        topicMap[topic].subtopics[subtopic] = { total: 0, withVideo: 0 };
+      }
+      topicMap[topic].subtopics[subtopic].total++;
+      if (hasVideo) topicMap[topic].subtopics[subtopic].withVideo++;
       
       // Difficulty stats
       const difficulty = problem.difficulty || 'Medium';
@@ -122,6 +144,14 @@ export const StatsDashboard = ({ problems, getVideoUrl }: StatsDashboardProps) =
         total: data.total,
         withVideo: data.withVideo,
         percentage: data.total > 0 ? Math.round((data.withVideo / data.total) * 100) : 0,
+        subtopics: Object.entries(data.subtopics)
+          .map(([subtopic, subData]) => ({
+            subtopic,
+            total: subData.total,
+            withVideo: subData.withVideo,
+            percentage: subData.total > 0 ? Math.round((subData.withVideo / subData.total) * 100) : 0,
+          }))
+          .sort((a, b) => b.total - a.total),
       }))
       .sort((a, b) => b.total - a.total)
       .slice(0, 10); // Top 10 topics
@@ -326,30 +356,8 @@ export const StatsDashboard = ({ problems, getVideoUrl }: StatsDashboardProps) =
           </CardContent>
         </Card>
 
-        {/* Topic Stats */}
-        <Card>
-          <CardHeader>
-            <CardTitle className="text-lg">Top Topics by Problem Count</CardTitle>
-          </CardHeader>
-          <CardContent className="space-y-4">
-            {stats.topicStats.map((topic, index) => (
-              <div key={topic.topic} className="space-y-2">
-                <div className="flex items-center justify-between text-sm">
-                  <span className="font-medium truncate max-w-[200px]" title={topic.topic}>
-                    {index + 1}. {topic.topic}
-                  </span>
-                  <span className="text-muted-foreground whitespace-nowrap">
-                    {topic.withVideo}/{topic.total} videos
-                  </span>
-                </div>
-                <Progress value={topic.percentage} className="h-2" />
-              </div>
-            ))}
-            {stats.topicStats.length === 0 && (
-              <p className="text-sm text-muted-foreground text-center py-4">No topic data available</p>
-            )}
-          </CardContent>
-        </Card>
+        {/* Topic Stats with Subtopics */}
+        <TopicSubtopicStats topicStats={stats.topicStats} />
       </div>
     </div>
   );

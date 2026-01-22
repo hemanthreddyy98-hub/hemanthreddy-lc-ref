@@ -22,4 +22,5 @@ export interface UnifiedProblem {
   codechefId?: string;
   codeforcesId?: string;
   rating?: number; // For Codeforces
+  created_at?: string; // For date-based filtering
 }

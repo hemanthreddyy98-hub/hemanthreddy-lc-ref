@@ -36,6 +36,7 @@ interface DbProblem {
   platform: string;
   platform_id: string | null;
   rating: number | null;
+  created_at: string;
 }
 
 const parseCompanyYears = (data: unknown): Record<string, number[]> | undefined => {
@@ -65,6 +66,7 @@ const mapDbProblemToUnified = (p: DbProblem): UnifiedProblem => ({
   codechefId: p.platform === 'codechef' ? p.platform_id || undefined : undefined,
   codeforcesId: p.platform === 'codeforces' ? p.platform_id || undefined : undefined,
   rating: p.rating || undefined,
+  created_at: p.created_at,
 });
 
 export const useProblems = (platform: Platform) => {

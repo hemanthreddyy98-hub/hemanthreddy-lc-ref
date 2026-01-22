@@ -1,7 +1,8 @@
 import { useMemo } from 'react';
-import { BarChart3, Video, FileText, TrendingUp } from 'lucide-react';
+import { BarChart3, Video, FileText, TrendingUp, Building2 } from 'lucide-react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Progress } from '@/components/ui/progress';
+import { Badge } from '@/components/ui/badge';
 import { UnifiedProblem } from '@/types/problem';
 
 interface StatsDashboardProps {
@@ -33,6 +34,13 @@ interface DifficultyStats {
   bgColor: string;
 }
 
+interface CompanyStats {
+  company: string;
+  total: number;
+  withVideo: number;
+  percentage: number;
+}
+
 export const StatsDashboard = ({ problems, getVideoUrl }: StatsDashboardProps) => {
   const stats = useMemo(() => {
     const totalProblems = problems.length;
@@ -48,6 +56,8 @@ export const StatsDashboard = ({ problems, getVideoUrl }: StatsDashboardProps) =
       Medium: { total: 0, withVideo: 0 },
       Hard: { total: 0, withVideo: 0 },
     };
+    // Company stats
+    const companyMap: Record<string, { total: number; withVideo: number }> = {};
     
     problems.forEach(problem => {
       const hasVideo = !!getVideoUrl(problem.id, problem.title);
@@ -74,6 +84,17 @@ export const StatsDashboard = ({ problems, getVideoUrl }: StatsDashboardProps) =
       if (difficultyMap[difficulty]) {
         difficultyMap[difficulty].total++;
         if (hasVideo) difficultyMap[difficulty].withVideo++;
+      }
+      
+      // Company stats
+      if (problem.companies && problem.companies.length > 0) {
+        problem.companies.forEach(company => {
+          if (!companyMap[company]) {
+            companyMap[company] = { total: 0, withVideo: 0 };
+          }
+          companyMap[company].total++;
+          if (hasVideo) companyMap[company].withVideo++;
+        });
       }
     });
     
@@ -122,6 +143,16 @@ export const StatsDashboard = ({ problems, getVideoUrl }: StatsDashboardProps) =
       bgColor: difficultyColors[difficulty].bgColor,
     }));
     
+    const companyStats: CompanyStats[] = Object.entries(companyMap)
+      .map(([company, data]) => ({
+        company,
+        total: data.total,
+        withVideo: data.withVideo,
+        percentage: data.total > 0 ? Math.round((data.withVideo / data.total) * 100) : 0,
+      }))
+      .sort((a, b) => b.total - a.total)
+      .slice(0, 15); // Top 15 companies
+    
     return {
       totalProblems,
       problemsWithVideos,
@@ -129,6 +160,8 @@ export const StatsDashboard = ({ problems, getVideoUrl }: StatsDashboardProps) =
       platformStats,
       topicStats,
       difficultyStats,
+      companyStats,
+      totalCompanies: Object.keys(companyMap).length,
     };
   }, [problems, getVideoUrl]);
 
@@ -182,12 +215,12 @@ export const StatsDashboard = ({ problems, getVideoUrl }: StatsDashboardProps) =
         
         <Card>
           <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-            <CardTitle className="text-sm font-medium">Platforms</CardTitle>
-            <BarChart3 className="h-4 w-4 text-muted-foreground" />
+            <CardTitle className="text-sm font-medium">Companies</CardTitle>
+            <Building2 className="h-4 w-4 text-muted-foreground" />
           </CardHeader>
           <CardContent>
-            <div className="text-2xl font-bold">{stats.platformStats.length}</div>
-            <p className="text-xs text-muted-foreground">Active platforms</p>
+            <div className="text-2xl font-bold">{stats.totalCompanies.toLocaleString()}</div>
+            <p className="text-xs text-muted-foreground">Unique companies</p>
           </CardContent>
         </Card>
       </div>
@@ -223,6 +256,44 @@ export const StatsDashboard = ({ problems, getVideoUrl }: StatsDashboardProps) =
               </div>
             ))}
           </div>
+        </CardContent>
+      </Card>
+
+      {/* Company Stats */}
+      <Card>
+        <CardHeader>
+          <CardTitle className="text-lg flex items-center gap-2">
+            <Building2 className="h-5 w-5" />
+            Top Companies by Problem Count
+          </CardTitle>
+        </CardHeader>
+        <CardContent>
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3">
+            {stats.companyStats.map((company, index) => (
+              <div 
+                key={company.company} 
+                className="flex items-center justify-between p-3 rounded-lg bg-muted/50 hover:bg-muted/70 transition-colors"
+              >
+                <div className="flex items-center gap-2 min-w-0">
+                  <Badge variant="outline" className="shrink-0 w-6 h-6 p-0 flex items-center justify-center text-xs">
+                    {index + 1}
+                  </Badge>
+                  <span className="font-medium truncate" title={company.company}>
+                    {company.company}
+                  </span>
+                </div>
+                <div className="flex flex-col items-end shrink-0 ml-2">
+                  <span className="text-sm font-semibold">{company.total}</span>
+                  <span className="text-xs text-muted-foreground">
+                    {company.withVideo} videos ({company.percentage}%)
+                  </span>
+                </div>
+              </div>
+            ))}
+          </div>
+          {stats.companyStats.length === 0 && (
+            <p className="text-sm text-muted-foreground text-center py-4">No company data available</p>
+          )}
         </CardContent>
       </Card>
 

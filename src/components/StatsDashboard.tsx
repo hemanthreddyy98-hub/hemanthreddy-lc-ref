@@ -24,6 +24,15 @@ interface TopicStats {
   percentage: number;
 }
 
+interface DifficultyStats {
+  difficulty: 'Easy' | 'Medium' | 'Hard';
+  total: number;
+  withVideo: number;
+  percentage: number;
+  color: string;
+  bgColor: string;
+}
+
 export const StatsDashboard = ({ problems, getVideoUrl }: StatsDashboardProps) => {
   const stats = useMemo(() => {
     const totalProblems = problems.length;
@@ -33,6 +42,12 @@ export const StatsDashboard = ({ problems, getVideoUrl }: StatsDashboardProps) =
     const platformMap: Record<string, { total: number; withVideo: number }> = {};
     // Topic stats
     const topicMap: Record<string, { total: number; withVideo: number }> = {};
+    // Difficulty stats
+    const difficultyMap: Record<string, { total: number; withVideo: number }> = {
+      Easy: { total: 0, withVideo: 0 },
+      Medium: { total: 0, withVideo: 0 },
+      Hard: { total: 0, withVideo: 0 },
+    };
     
     problems.forEach(problem => {
       const hasVideo = !!getVideoUrl(problem.id, problem.title);
@@ -53,6 +68,13 @@ export const StatsDashboard = ({ problems, getVideoUrl }: StatsDashboardProps) =
       }
       topicMap[topic].total++;
       if (hasVideo) topicMap[topic].withVideo++;
+      
+      // Difficulty stats
+      const difficulty = problem.difficulty || 'Medium';
+      if (difficultyMap[difficulty]) {
+        difficultyMap[difficulty].total++;
+        if (hasVideo) difficultyMap[difficulty].withVideo++;
+      }
     });
     
     const platformColors: Record<string, string> = {
@@ -83,12 +105,30 @@ export const StatsDashboard = ({ problems, getVideoUrl }: StatsDashboardProps) =
       .sort((a, b) => b.total - a.total)
       .slice(0, 10); // Top 10 topics
     
+    const difficultyColors: Record<string, { color: string; bgColor: string }> = {
+      Easy: { color: 'text-green-600 dark:text-green-400', bgColor: 'bg-green-500' },
+      Medium: { color: 'text-yellow-600 dark:text-yellow-400', bgColor: 'bg-yellow-500' },
+      Hard: { color: 'text-red-600 dark:text-red-400', bgColor: 'bg-red-500' },
+    };
+    
+    const difficultyStats: DifficultyStats[] = (['Easy', 'Medium', 'Hard'] as const).map(difficulty => ({
+      difficulty,
+      total: difficultyMap[difficulty].total,
+      withVideo: difficultyMap[difficulty].withVideo,
+      percentage: difficultyMap[difficulty].total > 0 
+        ? Math.round((difficultyMap[difficulty].withVideo / difficultyMap[difficulty].total) * 100) 
+        : 0,
+      color: difficultyColors[difficulty].color,
+      bgColor: difficultyColors[difficulty].bgColor,
+    }));
+    
     return {
       totalProblems,
       problemsWithVideos,
       overallPercentage: totalProblems > 0 ? Math.round((problemsWithVideos / totalProblems) * 100) : 0,
       platformStats,
       topicStats,
+      difficultyStats,
     };
   }, [problems, getVideoUrl]);
 
@@ -151,6 +191,40 @@ export const StatsDashboard = ({ problems, getVideoUrl }: StatsDashboardProps) =
           </CardContent>
         </Card>
       </div>
+
+      {/* Difficulty Stats */}
+      <Card>
+        <CardHeader>
+          <CardTitle className="text-lg">Problem Distribution by Difficulty</CardTitle>
+        </CardHeader>
+        <CardContent>
+          <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
+            {stats.difficultyStats.map((diff) => (
+              <div key={diff.difficulty} className="text-center p-4 rounded-lg bg-muted/50">
+                <div className={`text-2xl font-bold ${diff.color}`}>
+                  {diff.total.toLocaleString()}
+                </div>
+                <div className="text-sm font-medium mt-1">{diff.difficulty}</div>
+                <div className="mt-3">
+                  <div className="flex items-center justify-between text-xs text-muted-foreground mb-1">
+                    <span>Video Coverage</span>
+                    <span>{diff.percentage}%</span>
+                  </div>
+                  <div className="h-2 bg-muted rounded-full overflow-hidden">
+                    <div 
+                      className={`h-full ${diff.bgColor} transition-all duration-300`}
+                      style={{ width: `${diff.percentage}%` }}
+                    />
+                  </div>
+                  <div className="text-xs text-muted-foreground mt-1">
+                    {diff.withVideo}/{diff.total} videos
+                  </div>
+                </div>
+              </div>
+            ))}
+          </div>
+        </CardContent>
+      </Card>
 
       {/* Platform & Topic Stats */}
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">

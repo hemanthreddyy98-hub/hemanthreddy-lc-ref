@@ -1,10 +1,16 @@
-import { useMemo } from 'react';
+import { useMemo, useState } from 'react';
 import { BarChart3, Video, FileText, TrendingUp, Building2 } from 'lucide-react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Progress } from '@/components/ui/progress';
 import { Badge } from '@/components/ui/badge';
 import { UnifiedProblem } from '@/types/problem';
 import { TopicSubtopicStats } from '@/components/stats/TopicSubtopicStats';
+import { DateRangeFilter } from '@/components/stats/DateRangeFilter';
+
+interface DateRange {
+  from: Date | undefined;
+  to: Date | undefined;
+}
 
 interface StatsDashboardProps {
   problems: UnifiedProblem[];
@@ -51,8 +57,34 @@ interface CompanyStats {
 }
 
 export const StatsDashboard = ({ problems, getVideoUrl }: StatsDashboardProps) => {
+  const [dateRange, setDateRange] = useState<DateRange>({ from: undefined, to: undefined });
+
+  // Filter problems by date range if set
+  const filteredProblems = useMemo(() => {
+    if (!dateRange.from && !dateRange.to) return problems;
+    
+    return problems.filter(problem => {
+      // Use problem ID as proxy for creation date if no created_at available
+      // In real scenario, problems would have created_at from DB
+      const problemDate = (problem as any).created_at 
+        ? new Date((problem as any).created_at) 
+        : null;
+      
+      if (!problemDate) return true; // Include problems without dates
+      
+      if (dateRange.from && problemDate < dateRange.from) return false;
+      if (dateRange.to) {
+        const endOfDay = new Date(dateRange.to);
+        endOfDay.setHours(23, 59, 59, 999);
+        if (problemDate > endOfDay) return false;
+      }
+      
+      return true;
+    });
+  }, [problems, dateRange]);
+
   const stats = useMemo(() => {
-    const totalProblems = problems.length;
+    const totalProblems = filteredProblems.length;
     let problemsWithVideos = 0;
     
     // Platform stats
@@ -72,7 +104,7 @@ export const StatsDashboard = ({ problems, getVideoUrl }: StatsDashboardProps) =
     // Company stats
     const companyMap: Record<string, { total: number; withVideo: number }> = {};
     
-    problems.forEach(problem => {
+    filteredProblems.forEach(problem => {
       const hasVideo = !!getVideoUrl(problem.id, problem.title);
       if (hasVideo) problemsWithVideos++;
       
@@ -192,8 +224,9 @@ export const StatsDashboard = ({ problems, getVideoUrl }: StatsDashboardProps) =
       difficultyStats,
       companyStats,
       totalCompanies: Object.keys(companyMap).length,
+      allProblemsCount: problems.length,
     };
-  }, [problems, getVideoUrl]);
+  }, [filteredProblems, getVideoUrl, problems.length]);
 
   const getPlatformDisplayName = (platform: string) => {
     const names: Record<string, string> = {
@@ -206,8 +239,24 @@ export const StatsDashboard = ({ problems, getVideoUrl }: StatsDashboardProps) =
     return names[platform] || platform;
   };
 
+  const hasDateFilter = dateRange.from || dateRange.to;
+
   return (
     <div className="space-y-6 mb-8">
+      {/* Date Range Filter */}
+      <Card>
+        <CardContent className="pt-6">
+          <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
+            <DateRangeFilter dateRange={dateRange} onDateRangeChange={setDateRange} />
+            {hasDateFilter && (
+              <div className="text-sm text-muted-foreground">
+                Showing {stats.totalProblems.toLocaleString()} of {stats.allProblemsCount.toLocaleString()} problems
+              </div>
+            )}
+          </div>
+        </CardContent>
+      </Card>
+
       {/* Summary Cards */}
       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
         <Card>

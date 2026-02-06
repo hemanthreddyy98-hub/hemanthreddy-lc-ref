@@ -7,6 +7,7 @@ import { UnifiedProblem } from '@/types/problem';
 import { TopicSubtopicStats } from '@/components/stats/TopicSubtopicStats';
 import { DateRangeFilter } from '@/components/stats/DateRangeFilter';
 import { DistributionCharts } from '@/components/stats/DistributionCharts';
+import { ExportData } from '@/components/stats/ExportData';
 interface DateRange {
   from: Date | undefined;
   to: Date | undefined;
@@ -243,16 +244,19 @@ export const StatsDashboard = ({ problems, getVideoUrl }: StatsDashboardProps) =
 
   return (
     <div className="space-y-6 mb-8">
-      {/* Date Range Filter */}
+      {/* Date Range Filter & Export */}
       <Card>
         <CardContent className="pt-6">
           <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
             <DateRangeFilter dateRange={dateRange} onDateRangeChange={setDateRange} />
-            {hasDateFilter && (
-              <div className="text-sm text-muted-foreground">
-                Showing {stats.totalProblems.toLocaleString()} of {stats.allProblemsCount.toLocaleString()} problems
-              </div>
-            )}
+            <div className="flex items-center gap-3">
+              {hasDateFilter && (
+                <div className="text-sm text-muted-foreground">
+                  Showing {stats.totalProblems.toLocaleString()} of {stats.allProblemsCount.toLocaleString()} problems
+                </div>
+              )}
+              <ExportData problems={filteredProblems} getVideoUrl={getVideoUrl} />
+            </div>
           </div>
         </CardContent>
       </Card>

@@ -1,12 +1,12 @@
 import { useMemo, useState } from 'react';
-import { BarChart3, Video, FileText, TrendingUp, Building2 } from 'lucide-react';
+import { Video, FileText, TrendingUp, Building2 } from 'lucide-react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Progress } from '@/components/ui/progress';
 import { Badge } from '@/components/ui/badge';
 import { UnifiedProblem } from '@/types/problem';
 import { TopicSubtopicStats } from '@/components/stats/TopicSubtopicStats';
 import { DateRangeFilter } from '@/components/stats/DateRangeFilter';
-
+import { DistributionCharts } from '@/components/stats/DistributionCharts';
 interface DateRange {
   from: Date | undefined;
   to: Date | undefined;
@@ -304,10 +304,17 @@ export const StatsDashboard = ({ problems, getVideoUrl }: StatsDashboardProps) =
         </Card>
       </div>
 
-      {/* Difficulty Stats */}
+      {/* Distribution Charts */}
+      <DistributionCharts 
+        difficultyStats={stats.difficultyStats}
+        platformStats={stats.platformStats}
+        getPlatformDisplayName={getPlatformDisplayName}
+      />
+
+      {/* Difficulty Stats - Detailed */}
       <Card>
         <CardHeader>
-          <CardTitle className="text-lg">Problem Distribution by Difficulty</CardTitle>
+          <CardTitle className="text-lg">Video Coverage by Difficulty</CardTitle>
         </CardHeader>
         <CardContent>
           <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">

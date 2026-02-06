@@ -8,6 +8,8 @@ import { TopicSubtopicStats } from '@/components/stats/TopicSubtopicStats';
 import { DateRangeFilter } from '@/components/stats/DateRangeFilter';
 import { DistributionCharts } from '@/components/stats/DistributionCharts';
 import { ExportData } from '@/components/stats/ExportData';
+import { TopicTreemap } from '@/components/stats/TopicTreemap';
+
 interface DateRange {
   from: Date | undefined;
   to: Date | undefined;
@@ -419,6 +421,9 @@ export const StatsDashboard = ({ problems, getVideoUrl }: StatsDashboardProps) =
         {/* Topic Stats with Subtopics */}
         <TopicSubtopicStats topicStats={stats.topicStats} />
       </div>
+
+      {/* Topic Treemap Visualization */}
+      <TopicTreemap topicStats={stats.topicStats} />
     </div>
   );
 };

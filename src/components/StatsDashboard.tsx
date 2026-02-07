@@ -9,6 +9,7 @@ import { DateRangeFilter } from '@/components/stats/DateRangeFilter';
 import { DistributionCharts } from '@/components/stats/DistributionCharts';
 import { ExportData } from '@/components/stats/ExportData';
 import { TopicTreemap } from '@/components/stats/TopicTreemap';
+import { CompanyTopicHeatmap } from '@/components/stats/CompanyTopicHeatmap';
 
 interface DateRange {
   from: Date | undefined;
@@ -424,6 +425,9 @@ export const StatsDashboard = ({ problems, getVideoUrl }: StatsDashboardProps) =
 
       {/* Topic Treemap Visualization */}
       <TopicTreemap topicStats={stats.topicStats} />
+
+      {/* Company × Topic Heatmap */}
+      <CompanyTopicHeatmap problems={filteredProblems} />
     </div>
   );
 };

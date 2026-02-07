@@ -11,6 +11,7 @@ import { ExportData } from '@/components/stats/ExportData';
 import { TopicTreemap } from '@/components/stats/TopicTreemap';
 import { CompanyTopicHeatmap } from '@/components/stats/CompanyTopicHeatmap';
 import { CompanyDifficultyChart } from '@/components/stats/CompanyDifficultyChart';
+import { PlatformTopicRadar } from '@/components/stats/PlatformTopicRadar';
 
 interface DateRange {
   from: Date | undefined;
@@ -432,6 +433,9 @@ export const StatsDashboard = ({ problems, getVideoUrl }: StatsDashboardProps) =
 
       {/* Difficulty Breakdown by Company */}
       <CompanyDifficultyChart problems={filteredProblems} />
+
+      {/* Platform Topic Radar */}
+      <PlatformTopicRadar problems={filteredProblems} />
     </div>
   );
 };

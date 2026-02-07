@@ -10,6 +10,7 @@ import { DistributionCharts } from '@/components/stats/DistributionCharts';
 import { ExportData } from '@/components/stats/ExportData';
 import { TopicTreemap } from '@/components/stats/TopicTreemap';
 import { CompanyTopicHeatmap } from '@/components/stats/CompanyTopicHeatmap';
+import { CompanyDifficultyChart } from '@/components/stats/CompanyDifficultyChart';
 
 interface DateRange {
   from: Date | undefined;
@@ -428,6 +429,9 @@ export const StatsDashboard = ({ problems, getVideoUrl }: StatsDashboardProps) =
 
       {/* Company × Topic Heatmap */}
       <CompanyTopicHeatmap problems={filteredProblems} />
+
+      {/* Difficulty Breakdown by Company */}
+      <CompanyDifficultyChart problems={filteredProblems} />
     </div>
   );
 };
